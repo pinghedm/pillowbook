@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: db
+      POSTGES_USER: postgres
+      POSTGRES_PASSWORD: goodpassword
+      POSTGRES_HOST: db
+    ports:
+      - 5435:5432
+  backend:
+    stdin_open: true
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - .:/app
+
+    ports:
+      - 8000:8000
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    entrypoint: scripts/entrypoint.sh
+    environment:
+      DEBUG: 1
+      SECRET_KEY: django-insecure-p3hy51!%-z$y!iewkb@iuuah%o46z%00xtk&kywl75$^u0_d4d
+
+    depends_on:
+      - db
+
+volumes:
+  db-data:

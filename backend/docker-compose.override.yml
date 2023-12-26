@@ -1,0 +1,8 @@
+version: "3.9"
+
+services:
+  backend:
+    volumes:
+      - .:/app
+      - ~/.config/ptpython:/home/user/.config/ptpython/
+      - ~/.local/share/ptpython/history_pillowbook:/home/user/.ptpython_history

@@ -1,0 +1,36 @@
+version: "3"
+
+tasks:
+  pip-compile:
+    desc: create requirements.txt from requirements.in
+    cmds:
+      - docker compose run --build backend pip-compile
+      - docker compose run --build backend pip-compile requirements-dev.in
+    sources:
+      - backend/requirements.in
+      - backend/requirements-dev.in
+    generates:
+      - backend/requirements.txt
+      - backend/requirements-dev.txt
+
+  backend:
+    desc: run backend
+    cmds:
+      - docker compose up --build backend
+    deps: [pip-compile]
+
+  frontend:
+    desc: run frontend
+    cmds:
+      - docker compose up --build --renew-anon-volumes frontend
+
+  shell_plus:
+    desc: open django shell plus
+    cmds:
+      - docker compose run --build backend python manage.py shell_plus
+    deps: [pip-compile]
+  shell:
+    desc: open a shell
+    cmds:
+      - docker compose run --build backend sh
+    deps: [pip-compile]
