@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -138,4 +139,22 @@ CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS: list[str] = list(default_headers) + ["x-csrftoken"]
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "app.drf_permissions.AllowNone",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "backend.drf_helpers.SessionAuthentication"
+        # 'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+    ],
+    "EXCEPTION_HANDLER": "backend.drf_helpers.exception_handler",
+}
+CSRF_COOKIE_SAMESITE = "Strict"  # There isn't really a valid scenario where we'd want the csrf cookie when coming from outside of our origin
+CSRF_COOKIE_SECURE = env.SESSION_COOKIE_SECURE
+CSRF_COOKIE_HTTPONLY = False  # this is the default, but setting it explicitly because our frontend _must_ be able to read this cookie, currently
+CSRF_COOKIE_NAME = "csrftoken"
+
+# see https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-CSRF_COOKIE_HTTPONLY
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]

@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 services:
   db:
@@ -11,6 +11,8 @@ services:
       POSTGES_USER: postgres
       POSTGRES_PASSWORD: goodpassword
       POSTGRES_HOST: db
+      SESSION_COOKIE_SECURE: '0'
+
     ports:
       - 5435:5432
   backend:
