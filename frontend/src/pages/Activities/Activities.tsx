@@ -35,7 +35,9 @@ const Activities = ({}: ActivitiesProps) => {
                                     alignItems: 'center',
                                 }}
                             >
-                                {item.rating ? item.rating * (userSettings?.ratingMax ?? 5) : '-'}{' '}
+                                {item.rating
+                                    ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
+                                    : '-'}{' '}
                                 <StarFilled />
                             </div>
                         }

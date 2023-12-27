@@ -3,6 +3,7 @@ import { List } from 'antd'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { ItemIconByItemType, useItems } from 'services/item_service'
+import { useUserSettings } from 'services/user_service'
 import { capitalizeWords } from 'services/utils'
 
 export interface ItemsProps {}
@@ -10,6 +11,7 @@ export interface ItemsProps {}
 const Items = ({}: ItemsProps) => {
     const { data: items, isPending, fetchStatus } = useItems()
     const itemLength = useMemo(() => items?.length ?? 0, [items])
+    const { data: userSettings } = useUserSettings()
 
     return (
         <List
@@ -32,7 +34,10 @@ const Items = ({}: ItemsProps) => {
                                     alignItems: 'center',
                                 }}
                             >
-                                {item.rating ?? '-'} <StarFilled />
+                                {item.rating
+                                    ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
+                                    : '-'}{' '}
+                                <StarFilled />
                             </div>
                         }
                         style={{ cursor: 'pointer' }}
