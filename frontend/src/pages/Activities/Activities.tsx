@@ -1,6 +1,6 @@
 import { BookOutlined, QuestionCircleOutlined, StarFilled } from '@ant-design/icons'
 import { List, Spin, Typography } from 'antd'
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useMemo } from 'react'
 import { ActivityIconByItemType, useActivities } from 'services/activities_service'
 import { DateTime } from 'luxon'
 import { capitalizeWords } from 'services/utils'
@@ -12,10 +12,15 @@ export interface ActivitiesProps {}
 const Activities = ({}: ActivitiesProps) => {
     const { data: activities, isPending, fetchStatus } = useActivities()
     const { data: userSettings } = useUserSettings()
+    const activityLength = useMemo(() => activities?.length ?? 0, [activities])
 
     return (
         <List
-            style={{ backgroundColor: 'white', padding: '10px' }}
+            style={{ backgroundColor: 'white', padding: '10px', height: '100%', overflowY: 'auto' }}
+            pagination={{
+                pageSize: activityLength < 20 ? activityLength : 20,
+                hideOnSinglePage: true,
+            }}
             loading={isPending && fetchStatus !== 'idle'}
             dataSource={activities ?? []}
             renderItem={(item, index) => (
@@ -30,7 +35,7 @@ const Activities = ({}: ActivitiesProps) => {
                                     alignItems: 'center',
                                 }}
                             >
-                                {item.rating ? item.rating * (userSettings?.maxRating ?? 5) : '-'}{' '}
+                                {item.rating ? item.rating * (userSettings?.ratingMax ?? 5) : '-'}{' '}
                                 <StarFilled />
                             </div>
                         }

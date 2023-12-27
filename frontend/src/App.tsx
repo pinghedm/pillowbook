@@ -2,6 +2,7 @@ import { ReactNode, useMemo, useState } from 'react'
 import './App.css'
 import axios from 'axios'
 import {
+    Link,
     Navigate,
     Outlet,
     RouterProvider,
@@ -9,10 +10,17 @@ import {
     useLocation,
     useNavigate,
 } from 'react-router-dom'
-import { ConfigProvider, Layout, Menu, Spin, ThemeConfig } from 'antd'
+import { ConfigProvider, FloatButton, Layout, Menu, Spin, ThemeConfig } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Home from 'pages/Home/Home.lazy'
-import { BookOutlined, DownOutlined, UserOutlined } from '@ant-design/icons'
+import {
+    BookOutlined,
+    DownOutlined,
+    EllipsisOutlined,
+    PlusOutlined,
+    UserOutlined,
+    VideoCameraOutlined,
+} from '@ant-design/icons'
 import Activities from 'pages/Activities/Activities.lazy'
 import AddActivity from 'pages/Activities/AddActivity/AddActivity.lazy'
 import ActivityDetail from 'pages/Activities/ActivityDetail/ActivityDetail.lazy'
@@ -21,6 +29,8 @@ import { useLogout, useUserIsAuthenticated } from 'services/auth_service'
 import Items from 'pages/Items/Items.lazy'
 import ItemDetails from 'pages/Items/ItemDetails/ItemDetails.lazy'
 import Profile from 'pages/Profile/Profile.lazy'
+import ProfileBasics from 'pages/Profile/ProfileBasics/ProfileBasics.lazy'
+import ProfileItemTypes from 'pages/Profile/ProfileItemTypes/ProfileItemTypes.lazy'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -100,8 +110,8 @@ const LoggedInRoot = () => {
                         },
                         { key: 'items', label: 'Items' },
                         { key: 'activities', label: 'Activities' },
-                        { key: 'diary', label: 'Diary' },
-                        { key: 'history', label: 'History' },
+                        // { key: 'diary', label: 'Diary' },
+                        { key: 'history', label: 'History', disabled: true },
                     ]}
                     onClick={({ key }) => {
                         navigate({ pathname: key })
@@ -115,7 +125,7 @@ const LoggedInRoot = () => {
                         if (e.key === 'logout') {
                             logoutMutation.mutate()
                         } else if (e.key === 'profile') {
-                            navigate({ pathname: '/profile' })
+                            navigate({ pathname: '/profile/basics' })
                         }
                         console.log(e)
                     }}
@@ -150,6 +160,27 @@ const LoggedInRoot = () => {
                 }}
             >
                 <Outlet />
+                <FloatButton.Group
+                    trigger="click"
+                    type="primary"
+                    icon={<PlusOutlined />}
+                >
+                    <FloatButton
+                        icon={
+                            <Link to={{ pathname: '/activities/book' }}>
+                                <BookOutlined />
+                            </Link>
+                        }
+                    />
+                    <FloatButton
+                        icon={
+                            <Link to={{ pathname: '/activities/movie' }}>
+                                <VideoCameraOutlined />
+                            </Link>
+                        }
+                    />
+                    <FloatButton icon={<EllipsisOutlined />} />
+                </FloatButton.Group>
             </Layout.Content>
         </Layout>
     )
@@ -175,14 +206,17 @@ const routes = [
         path: 'home',
         element: <Home />,
     },
-    { path: 'profile', element: <Profile /> },
+    {
+        path: 'profile',
+        element: <Profile />,
+        children: [
+            { path: 'basics', element: <ProfileBasics /> },
+            { path: 'itemTypes', element: <ProfileItemTypes /> },
+        ],
+    },
     {
         path: '/activities',
-        element: (
-            <div>
-                <Outlet />
-            </div>
-        ),
+        element: <Outlet />,
         children: [
             { path: '', element: <Activities /> },
             {
@@ -197,11 +231,7 @@ const routes = [
     },
     {
         path: 'items',
-        element: (
-            <div>
-                <Outlet />
-            </div>
-        ),
+        element: <Outlet />,
         children: [
             { path: '', element: <Items /> },
             { path: ':token', element: <ItemDetails /> },

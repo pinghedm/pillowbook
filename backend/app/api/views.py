@@ -63,8 +63,9 @@ class ActivityList(generics.ListCreateAPIView):
 
         activity_details = incoming.pop("activityDetails")
         rating = activity_details.pop("rating", None)
+        max_rating = request.user.settings.get("ratingMax", 5)
         if rating is not None:
-            rating = rating / request.user.settings.get("maxRating", 5)
+            rating = rating / max_rating
         activity_details["rating"] = rating
         new_activity = Activity(
             user=request.user,

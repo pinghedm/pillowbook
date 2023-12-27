@@ -7,17 +7,28 @@ import validator from '@rjsf/validator-ajv8'
 import { Spin } from 'antd'
 import { capitalizeWords } from 'services/utils'
 import { useCreateActivity } from 'services/activities_service'
+import { useUserSettings } from 'services/user_service'
 export interface AddActivityProps {}
 
-const activityProperties: RJSFSchema = {
-    rating: { type: 'number', title: 'Rating' },
-    notes: { type: 'string', title: 'Notes' },
-    finished: { type: 'boolean', title: 'Finished' },
-}
 const AddActivity = ({}: AddActivityProps) => {
     const navigate = useNavigate()
     const { type: itemTypeSlug } = useParams()
     const { data: itemType } = useItemType(itemTypeSlug)
+    const { data: userSettings } = useUserSettings()
+
+    const activityProperties: RJSFSchema = useMemo(
+        () => ({
+            rating: {
+                type: 'number',
+                title: 'Rating',
+                minimum: 0,
+                maximum: userSettings?.ratingMax ?? 5,
+            },
+            notes: { type: 'string', title: 'Notes' },
+            finished: { type: 'boolean', title: 'Finished' },
+        }),
+        [userSettings],
+    )
 
     const itemProperties: RJSFSchema = useMemo(() => {
         if (!itemType) {
