@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from app.models import Activity, Item, ItemType
 from app.serializers import (
     ActivityDetailSerializer,
+    ActivityListSerializer,
     ItemTypeListSerializer,
     ItemTypeSerializer,
 )
@@ -35,7 +36,7 @@ class ItemTypeDetails(generics.RetrieveAPIView):
 
 class ActivityList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = ActivityDetailSerializer
+    serializer_class = ActivityListSerializer
 
     def get_queryset(self):
         return Activity.objects.filter(user=self.request.user)

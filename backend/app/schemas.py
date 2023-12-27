@@ -2,6 +2,7 @@ default_item_types = [
     {
         "slug": "book",
         "name": "Book",
+        "name_schema": "{{title}}",
         "item_schema": {
             "type": "object",
             "properties": {
@@ -26,6 +27,7 @@ default_item_types = [
     {
         "slug": "movie",
         "name": "Movie",
+        "name_schema": "{{title}}",
         "item_schema": {
             "type": "object",
             "properties": {

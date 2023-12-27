@@ -1,4 +1,5 @@
 import datetime
+import re
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from django.db import models
@@ -50,7 +51,8 @@ class ItemType(TimeStampedModel):
     name = models.TextField()
     item_schema = JSONField(default=dict)
     activity_schema = JSONField(default=dict)
-    #  TODO: custom icon
+    #  TODO: custom icon?
+    name_schema = TextField(blank=True)
 
     def __str__(self) -> str:
         return self.slug
@@ -61,6 +63,8 @@ def _gen_item_token():
 
 
 class Item(TimeStampedModel):
+    name_template_regex = re.compile(r"{{(\w+)}}")
+
     token: "TextField[str, str]" = TextField(default=_gen_item_token, unique=True)
     info = JSONField(default=dict)
     rating: "models.FloatField[float, float]" = models.FloatField(
@@ -71,6 +75,14 @@ class Item(TimeStampedModel):
     user: "models.ForeignKey[User, User]" = models.ForeignKey(
         User, on_delete=models.CASCADE
     )
+
+    @property
+    def name(self):
+        name_fields = re.findall(self.name_template_regex, self.item_type.name_schema)
+        name = self.item_type.name_schema
+        for field in name_fields:
+            name = name.replace("{{" + field + "}}", self.info.get(field, ""))
+        return name
 
     def __str__(self) -> str:
         return f"Item<{self.token}> of type {self.item_type}"

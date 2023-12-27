@@ -17,16 +17,34 @@ class ItemTypeSerializer(ModelSerializer):
         fields = ["slug", "name", "item_schema", "activity_schema"]
 
 
-class ActivityDetailSerializer(ModelSerializer):
-    item = SlugRelatedField(slug_field="token", queryset=Item.objects.all())
+class ActivityListSerializer(ModelSerializer):
     item_type = CharField(source="item.item_type.slug")
+    item_name = CharField(source="item.name")
 
     class Meta:
         model = Activity
         fields = [
+            "token",
+            "item_type",
+            "start_time",
+            "end_time",
+            "finished",
+            "rating",
+            "item_name",
+        ]
+
+
+class ActivityDetailSerializer(ModelSerializer):
+    item = SlugRelatedField(slug_field="token", queryset=Item.objects.all())
+    item_type = CharField(source="item.item_type.slug")
+    item_name = CharField(source="item.name")
+
+    class Meta:
+        model = Activity
+        fields = [
+            "token",
             "item_type",
             "item",
-            "token",
             "start_time",
             "end_time",
             "finished",
