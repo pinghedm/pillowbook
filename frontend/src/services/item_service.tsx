@@ -1,5 +1,5 @@
 import { BookOutlined, VideoCameraOutlined } from '@ant-design/icons'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { ReactNode } from 'react'
 
@@ -46,4 +46,23 @@ export const useItem = (token?: string) => {
         enabled: !!token,
     })
     return query
+}
+
+export const useUpdateItem = () => {
+    const _patch = async (token: string, patch: Partial<ItemDetail>) => {
+        const res = await axios.patch('/api/item/' + token, patch)
+        return res.data
+    }
+    const queryClient = useQueryClient()
+    const mutation = useMutation({
+        mutationFn: ({ token, patch }: { token: string; patch: Partial<ItemDetail> }) =>
+            _patch(token, patch),
+        onMutate: () => {
+            queryClient.cancelQueries({ queryKey: ['items'] })
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['items'] })
+        },
+    })
+    return mutation
 }
