@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Item } from './item_service'
+import { ItemDetail } from './item_service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOutlined, VideoCameraOutlined } from '@ant-design/icons'
 import { ReactNode } from 'react'
@@ -35,7 +35,7 @@ export interface ActivityDetail {
 }
 
 export interface CreateActivityType {
-    itemDetails: { info: Item['info']; item_type: Item['item_type'] }
+    itemDetails: { info: ItemDetail['info']; item_type: ItemDetail['item_type'] }
     activityDetails: Omit<ActivityDetail, 'token' | 'item' | 'item_type'>
 }
 
@@ -65,4 +65,38 @@ export const useActivities = () => {
 
     const query = useQuery({ queryKey: ['activities'], queryFn: _get })
     return query
+}
+
+export const useActivity = (token?: string) => {
+    const _get = async (token: string) => {
+        const res = await axios.get<ActivityDetail>('/api/activity/' + token)
+        return res.data
+    }
+    const query = useQuery({
+        queryKey: ['activities', token],
+        queryFn: () => _get(token ?? ''),
+        enabled: !!token,
+    })
+    return query
+}
+
+export const useUpdateActivity = () => {
+    const _patch = async (token: string, patch: Partial<ActivityDetail>) => {
+        const res = await axios.patch<ActivityDetail>('/api/activity/' + token, patch)
+        return res.data
+    }
+
+    const queryClient = useQueryClient()
+    const mutation = useMutation({
+        mutationFn: ({ token, patch }: { token: string; patch: Partial<ActivityDetail> }) =>
+            _patch(token, patch),
+
+        onMutate: () => {
+            queryClient.cancelQueries({ queryKey: ['activities'] })
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['activities'] })
+        },
+    })
+    return mutation
 }

@@ -8,6 +8,7 @@ from app.models import Activity, Item, ItemType, User
 from app.serializers import (
     ActivityDetailSerializer,
     ActivityListSerializer,
+    ItemDetailSerializer,
     ItemListSerializer,
     ItemTypeListSerializer,
     ItemTypeSerializer,
@@ -34,6 +35,16 @@ class ItemTypeDetails(generics.RetrieveAPIView):
     def get_queryset(self):
         slug = self.kwargs["slug"]
         return ItemType.objects.filter(slug=slug)
+
+
+class ActivityDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ActivityDetailSerializer
+    lookup_field = "token"
+
+    def get_queryset(self):
+        token = self.kwargs["token"]
+        return Activity.objects.filter(user=self.request.user, token=token)
 
 
 class ActivityList(generics.ListCreateAPIView):
@@ -83,6 +94,15 @@ class ItemList(generics.ListAPIView):
 
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user)
+
+
+class ItemDetails(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ItemDetailSerializer
+    lookup_field = "token"
+
+    def get_queryset(self):
+        return Item.objects.filter(user=self.request.user, token=self.kwargs["token"])
 
 
 class UserDetails(generics.RetrieveUpdateAPIView):

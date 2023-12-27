@@ -38,7 +38,6 @@ class ActivityListSerializer(ModelSerializer):
 class ActivityDetailSerializer(ModelSerializer):
     item = SlugRelatedField(slug_field="token", queryset=Item.objects.all())
     item_type = CharField(source="item.item_type.slug")
-    item_name = CharField(source="item.name")
 
     class Meta:
         model = Activity
@@ -66,6 +65,14 @@ class ItemListSerializer(ModelSerializer):
             "rating",
             "item_type",
         ]
+
+
+class ItemDetailSerializer(ModelSerializer):
+    item_type = CharField(source="item_type.slug")
+
+    class Meta:
+        model = Item
+        fields = ["token", "rating", "notes", "item_type", "info", "name"]
 
 
 class UserSettingsSerializer(ModelSerializer):

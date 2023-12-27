@@ -10,6 +10,13 @@ export const ItemIconByItemType: Record<string, ReactNode> = {
 
 export interface Item {
     token: string
+    name: string
+    rating?: number
+    item_type: string
+}
+
+export interface ItemDetail {
+    token: string
     rating: number
     notes: string
     item_type: string // slug
@@ -24,5 +31,19 @@ export const useItems = () => {
     }
 
     const query = useQuery({ queryKey: ['items'], queryFn: _get })
+    return query
+}
+
+export const useItem = (token?: string) => {
+    const _get = async (token: string) => {
+        const res = await axios.get<ItemDetail>('/api/item/' + token)
+        return res.data
+    }
+
+    const query = useQuery({
+        queryKey: ['items', token],
+        queryFn: () => _get(token ?? ''),
+        enabled: !!token,
+    })
     return query
 }
