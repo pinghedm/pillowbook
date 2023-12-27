@@ -8,7 +8,7 @@ from django.contrib.postgres.operations import CreateCollation
 class Migration(migrations.Migration):
     initial = True
 
-    dependencies = []
+    dependencies = [('auth','__first__')]
 
     operations = [
         CreateCollation(
