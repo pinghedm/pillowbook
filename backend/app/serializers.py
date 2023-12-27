@@ -1,3 +1,4 @@
+from django.db.models.base import Model
 from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
@@ -51,4 +52,17 @@ class ActivityDetailSerializer(ModelSerializer):
             "rating",
             "notes",
             "info",
+        ]
+
+
+class ItemListSerializer(ModelSerializer):
+    item_type = CharField(source="item_type.slug")
+
+    class Meta:
+        model = Item
+        fields = [
+            "token",
+            "name",
+            "rating",
+            "item_type",
         ]

@@ -19,6 +19,7 @@ import ActivityDetail from 'pages/Activities/ActivityDetail/ActivityDetail.lazy'
 import Login from 'pages/Login/Login.lazy'
 import { useLogout, useUserIsAuthenticated } from 'services/auth_service'
 import Items from 'pages/Items/Items.lazy'
+import ItemDetails from 'pages/Items/ItemDetails/ItemDetails.lazy'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -186,7 +187,10 @@ const routes = [
                 <Outlet />
             </div>
         ),
-        children: [{ path: '', element: <Items /> }],
+        children: [
+            { path: '', element: <Items /> },
+            { path: ':token', element: <ItemDetails /> },
+        ],
     },
 ]
 

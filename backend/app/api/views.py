@@ -8,6 +8,7 @@ from app.models import Activity, Item, ItemType
 from app.serializers import (
     ActivityDetailSerializer,
     ActivityListSerializer,
+    ItemListSerializer,
     ItemTypeListSerializer,
     ItemTypeSerializer,
 )
@@ -68,3 +69,11 @@ class ActivityList(generics.ListCreateAPIView):
         new_activity.save()
         serialized_obj = self.serializer_class(new_activity).data
         return Response(serialized_obj, status=status.HTTP_201_CREATED)
+
+
+class ItemList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ItemListSerializer
+
+    def get_queryset(self):
+        return Item.objects.filter(user=self.request.user)

@@ -1,28 +1,21 @@
 import { BookOutlined, QuestionCircleOutlined, StarFilled } from '@ant-design/icons'
 import { List, Spin, Typography } from 'antd'
 import React, { ReactNode } from 'react'
-import { useActivities } from 'services/activities_service'
+import { ActivityIconByItemType, useActivities } from 'services/activities_service'
 import { DateTime } from 'luxon'
 import { capitalizeWords } from 'services/utils'
 import { Link } from 'react-router-dom'
-
-const ActivityIconByItemType: Record<string, ReactNode> = {
-    book: <BookOutlined />,
-}
 
 export interface ActivitiesProps {}
 
 const Activities = ({}: ActivitiesProps) => {
     const { data: activities, isPending, fetchStatus } = useActivities()
 
-    if (!activities) {
-        return <Spin />
-    }
     return (
         <List
             style={{ backgroundColor: 'white', padding: '10px' }}
             loading={isPending && fetchStatus !== 'idle'}
-            dataSource={activities}
+            dataSource={activities ?? []}
             renderItem={(item, index) => (
                 <Link to={{ pathname: `${item.item_type}/${item.token}` }}>
                     <List.Item
