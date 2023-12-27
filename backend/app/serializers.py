@@ -3,7 +3,7 @@ from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ModelSerializer
 
-from app.models import Activity, Item, ItemType
+from app.models import Activity, Item, ItemType, User
 
 
 class ItemTypeListSerializer(ModelSerializer):
@@ -66,3 +66,9 @@ class ItemListSerializer(ModelSerializer):
             "rating",
             "item_type",
         ]
+
+
+class UserSettingsSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["settings"]

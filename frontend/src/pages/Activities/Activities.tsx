@@ -5,11 +5,13 @@ import { ActivityIconByItemType, useActivities } from 'services/activities_servi
 import { DateTime } from 'luxon'
 import { capitalizeWords } from 'services/utils'
 import { Link } from 'react-router-dom'
+import { useUserSettings } from 'services/user_service'
 
 export interface ActivitiesProps {}
 
 const Activities = ({}: ActivitiesProps) => {
     const { data: activities, isPending, fetchStatus } = useActivities()
+    const { data: userSettings } = useUserSettings()
 
     return (
         <List
@@ -28,7 +30,8 @@ const Activities = ({}: ActivitiesProps) => {
                                     alignItems: 'center',
                                 }}
                             >
-                                {item.rating ?? '-'} <StarFilled />
+                                {item.rating ? item.rating * (userSettings?.maxRating ?? 5) : '-'}{' '}
+                                <StarFilled />
                             </div>
                         }
                         style={{ cursor: 'pointer' }}

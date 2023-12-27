@@ -1,7 +1,7 @@
 import Form from '@rjsf/antd'
 import { RJSFSchema } from '@rjsf/utils'
 import React, { useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useItemType } from 'services/item_type_service'
 import validator from '@rjsf/validator-ajv8'
 import { Spin } from 'antd'
@@ -15,6 +15,7 @@ const activityProperties: RJSFSchema = {
     finished: { type: 'boolean', title: 'Finished' },
 }
 const AddActivity = ({}: AddActivityProps) => {
+    const navigate = useNavigate()
     const { type: itemTypeSlug } = useParams()
     const { data: itemType } = useItemType(itemTypeSlug)
 
@@ -75,24 +76,31 @@ const AddActivity = ({}: AddActivityProps) => {
                 }}
                 onSubmit={e => {
                     const formData = e.formData
-                    createActivityMutation.mutate({
-                        activityDetails: {
-                            start_time: formData.start_time,
-                            end_time: formData.end_time || new Date().toISOString(),
-                            finished: formData.finished,
-                            rating: formData.rating,
-                            notes: formData.notes,
-                            info: formData.info,
-                        },
-                        itemDetails: {
-                            item_type: itemType.slug,
-                            info: Object.fromEntries(
-                                Object.entries(formData).filter(([k, v]) =>
-                                    Object.keys(itemProperties).includes(k),
+                    createActivityMutation.mutate(
+                        {
+                            activityDetails: {
+                                start_time: formData.start_time,
+                                end_time: formData.end_time || new Date().toISOString(),
+                                finished: formData.finished,
+                                rating: formData.rating,
+                                notes: formData.notes,
+                                info: formData.info,
+                            },
+                            itemDetails: {
+                                item_type: itemType.slug,
+                                info: Object.fromEntries(
+                                    Object.entries(formData).filter(([k, v]) =>
+                                        Object.keys(itemProperties).includes(k),
+                                    ),
                                 ),
-                            ),
+                            },
                         },
-                    })
+                        {
+                            onSuccess: activity => {
+                                navigate({ pathname: activity.token })
+                            },
+                        },
+                    )
                 }}
                 onError={e => console.log(e)}
             />

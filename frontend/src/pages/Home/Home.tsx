@@ -39,7 +39,13 @@ const Home = ({}: HomeProps) => {
                         </Link>
                     }
                 />
-                <FloatButton icon={<VideoCameraOutlined />} />
+                <FloatButton
+                    icon={
+                        <Link to={{ pathname: '/activities/movie' }}>
+                            <VideoCameraOutlined />
+                        </Link>
+                    }
+                />
                 <FloatButton icon={<EllipsisOutlined />} />
             </FloatButton.Group>
         </div>

@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { Item } from './item_service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOutlined } from '@ant-design/icons'
+import { BookOutlined, VideoCameraOutlined } from '@ant-design/icons'
 import { ReactNode } from 'react'
 export const ActivityIconByItemType: Record<string, ReactNode> = {
     book: <BookOutlined />,
+    movie: <VideoCameraOutlined />,
 }
 
 export interface Activity {

@@ -12,7 +12,7 @@ import {
 import { ConfigProvider, Layout, Menu, Spin, ThemeConfig } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Home from 'pages/Home/Home.lazy'
-import { BookOutlined, UserOutlined } from '@ant-design/icons'
+import { BookOutlined, DownOutlined, UserOutlined } from '@ant-design/icons'
 import Activities from 'pages/Activities/Activities.lazy'
 import AddActivity from 'pages/Activities/AddActivity/AddActivity.lazy'
 import ActivityDetail from 'pages/Activities/ActivityDetail/ActivityDetail.lazy'
@@ -20,6 +20,7 @@ import Login from 'pages/Login/Login.lazy'
 import { useLogout, useUserIsAuthenticated } from 'services/auth_service'
 import Items from 'pages/Items/Items.lazy'
 import ItemDetails from 'pages/Items/ItemDetails/ItemDetails.lazy'
+import Profile from 'pages/Profile/Profile.lazy'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -107,24 +108,37 @@ const LoggedInRoot = () => {
                     }}
                     defaultSelectedKeys={[selectedKey]}
                 />
-                <div
-                    style={{
-                        minWidth: '30px',
-                        height: '30px',
-                        width: '30px',
-                        borderRadius: '15px',
-                        backgroundColor: 'white',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                <Menu
+                    expandIcon={<DownOutlined />}
+                    theme="dark"
+                    onClick={e => {
+                        if (e.key === 'logout') {
+                            logoutMutation.mutate()
+                        } else if (e.key === 'profile') {
+                            navigate({ pathname: '/profile' })
+                        }
+                        console.log(e)
                     }}
-                    onClick={() => {
-                        logoutMutation.mutate()
-                    }}
-                >
-                    <UserOutlined style={{ color: 'black', fontSize: '15px' }} />
-                </div>
+                    mode="vertical"
+                    triggerSubMenuAction="click"
+                    items={[
+                        {
+                            key: 'parent',
+                            label: '',
+                            icon: <UserOutlined />,
+                            children: [
+                                {
+                                    key: 'profile',
+                                    label: 'Profile',
+                                },
+                                {
+                                    key: 'logout',
+                                    label: 'Logout',
+                                },
+                            ],
+                        },
+                    ]}
+                />
             </Layout.Header>
             <Layout.Content
                 style={{
@@ -161,6 +175,7 @@ const routes = [
         path: 'home',
         element: <Home />,
     },
+    { path: 'profile', element: <Profile /> },
     {
         path: '/activities',
         element: (

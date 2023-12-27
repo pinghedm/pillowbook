@@ -4,13 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from app.models import Activity, Item, ItemType
+from app.models import Activity, Item, ItemType, User
 from app.serializers import (
     ActivityDetailSerializer,
     ActivityListSerializer,
     ItemListSerializer,
     ItemTypeListSerializer,
     ItemTypeSerializer,
+    UserSettingsSerializer,
 )
 
 
@@ -61,6 +62,10 @@ class ActivityList(generics.ListCreateAPIView):
         )
 
         activity_details = incoming.pop("activityDetails")
+        rating = activity_details.pop("rating", None)
+        if rating is not None:
+            rating = rating / request.user.settings.get("maxRating", 5)
+        activity_details["rating"] = rating
         new_activity = Activity(
             user=request.user,
             item=item,
@@ -77,3 +82,11 @@ class ItemList(generics.ListAPIView):
 
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user)
+
+
+class UserDetails(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSettingsSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(pk=self.request.user.pk)

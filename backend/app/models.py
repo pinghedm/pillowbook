@@ -38,6 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     )
     token: "TextField[str, str]" = TextField(default=_gen_user_token, unique=True)
     is_staff: "BooleanField[bool, bool]" = BooleanField(default=False)
+    settings = JSONField(default=dict, blank=True)
 
     objects = UserManager()
 
@@ -49,8 +50,8 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 class ItemType(TimeStampedModel):
     slug = models.SlugField(max_length=200)
     name = models.TextField()
-    item_schema = JSONField(default=dict)
-    activity_schema = JSONField(default=dict)
+    item_schema = JSONField(default=dict, blank=True)
+    activity_schema = JSONField(default=dict, blank=True)
     #  TODO: custom icon?
     name_schema = TextField(blank=True)
 
@@ -66,7 +67,7 @@ class Item(TimeStampedModel):
     name_template_regex = re.compile(r"{{(\w+)}}")
 
     token: "TextField[str, str]" = TextField(default=_gen_item_token, unique=True)
-    info = JSONField(default=dict)
+    info = JSONField(default=dict, blank=True)
     rating: "models.FloatField[float, float]" = models.FloatField(
         null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)]
     )
@@ -118,4 +119,7 @@ class Activity(TimeStampedModel):
     )
     notes = TextField(blank=True)
 
-    info = JSONField(default=dict)
+    info = JSONField(default=dict, blank=True)
+
+    def __str__(self):
+        return f"Activity <{self.token}> for {self.item.name}"

@@ -1,10 +1,11 @@
-import { BookOutlined } from '@ant-design/icons'
+import { BookOutlined, VideoCameraOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { ReactNode } from 'react'
 
 export const ItemIconByItemType: Record<string, ReactNode> = {
     book: <BookOutlined />,
+    movie: <VideoCameraOutlined />,
 }
 
 export interface Item {
