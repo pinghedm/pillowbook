@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import axios from 'axios'
 import {
@@ -9,6 +9,7 @@ import {
     createBrowserRouter,
     useLocation,
     useNavigate,
+    useSearchParams,
 } from 'react-router-dom'
 import { ConfigProvider, FloatButton, Layout, Menu, Modal, Spin, ThemeConfig } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -89,7 +90,17 @@ const LoggedInRoot = () => {
     }, [itemTypes, userSettings])
 
     const [addActivityModalOpen, setAddActivityModalOpen] = useState(false)
+    const [searchParams, setSearchParams] = useSearchParams()
 
+    useEffect(() => {
+        if (searchParams.get('addAct')) {
+            setAddActivityModalOpen(true)
+            setSearchParams(prev => {
+                prev.delete('addAct')
+                return prev
+            })
+        }
+    }, [searchParams])
     return (
         <Layout style={{ height: '100vh', width: '100vw' }}>
             <Modal
