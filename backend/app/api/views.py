@@ -2,6 +2,7 @@ from django.http import Http404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.utils.text import slugify
 from rest_framework.response import Response
 
 from app.models import Activity, Item, ItemType, User
@@ -21,20 +22,27 @@ class ItemTypeList(generics.ListCreateAPIView):
     serializer_class = ItemTypeListSerializer
 
     def get_queryset(self):
-        return ItemType.objects.all()
+        return ItemType.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        raise NotImplemented
+        incoming = request.data
+        new_item_type = ItemType(
+            user=request.user, name=incoming["name"], slug=slugify(incoming["name"])
+        )
+        new_item_type.save()
+        return Response(
+            self.serializer_class(new_item_type).data, status=status.HTTP_201_CREATED
+        )
 
 
-class ItemTypeDetails(generics.RetrieveAPIView):
+class ItemTypeDetails(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ItemTypeSerializer
     lookup_field = "slug"
 
     def get_queryset(self):
         slug = self.kwargs["slug"]
-        return ItemType.objects.filter(slug=slug)
+        return ItemType.objects.filter(slug=slug, user=self.request.user)
 
 
 class ActivityDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -60,7 +68,7 @@ class ActivityList(generics.ListCreateAPIView):
         item_details = incoming.pop("itemDetails")
 
         item_type_slug = item_details.pop("item_type")
-        item_type = get_object_or_404(ItemType, slug=item_type_slug)
+        item_type = get_object_or_404(ItemType, slug=item_type_slug, user=request.user)
         item_required_fields = item_type.item_schema["required"]
 
         item, _ = Item.objects.get_or_create(

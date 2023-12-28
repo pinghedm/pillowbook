@@ -12,7 +12,7 @@ admin.site.register(User, UserAdmin)
 
 
 class ItemTypeAdmin(admin.ModelAdmin):
-    list_display = ["slug", "name"]
+    list_display = ["slug", "name", "user"]
     search_fields = ["slug", "name"]
 
 

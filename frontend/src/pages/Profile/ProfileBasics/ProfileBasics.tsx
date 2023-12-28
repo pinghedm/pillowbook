@@ -1,4 +1,4 @@
-import { Alert, Button, InputNumber } from 'antd'
+import { Alert, Button, Divider, InputNumber } from 'antd'
 import React, { useState } from 'react'
 import { useItemTypes } from 'services/item_type_service'
 import { useUpdateUserSettings, useUserSettings } from 'services/user_service'
@@ -66,10 +66,17 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                     }}
                 />
             </div>
+            <Divider />
             <div>
                 Item Types in Quick Menu
                 <div
-                    style={{ display: 'flex', flexDirection: 'row', gap: '5px', flexWrap: 'wrap' }}
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '5px',
+                        flexWrap: 'wrap',
+                        marginTop: '5px',
+                    }}
                 >
                     {itemTypes?.map(t => (
                         <Button

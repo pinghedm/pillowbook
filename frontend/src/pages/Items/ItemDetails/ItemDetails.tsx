@@ -17,25 +17,6 @@ const ItemDetails = ({}: ItemDetailsProps) => {
     const updateItemMutation = useUpdateItem()
     const { data: userSettings } = useUserSettings()
 
-    const itemProperties: RJSFSchema = useMemo(() => {
-        if (!itemType) {
-            return {}
-        }
-        const properties: RJSFSchema = {
-            ...itemType.item_schema.properties,
-        }
-        const labelMap: Record<string, string> = {
-            ...itemType.item_schema.properties.labelMap,
-        }
-        delete properties['labelMap']
-        delete properties['autocompleteFields']
-        return Object.fromEntries(
-            Object.entries(properties).map(([k, v]) => [
-                k,
-                { ...v, title: labelMap?.[k] ?? capitalizeWords(k) ?? k },
-            ]),
-        )
-    }, [itemType])
     const filteredSchema = useMemo(() => {
         if (!itemType) {
             return {}
@@ -47,7 +28,7 @@ const ItemDetails = ({}: ItemDetailsProps) => {
             title: item?.name ?? '',
 
             properties: {
-                ...itemProperties,
+                ...itemType.item_schema.properties,
                 rating: {
                     type: 'number',
                     title: 'Rating',

@@ -15,7 +15,7 @@ class ItemTypeListSerializer(ModelSerializer):
 class ItemTypeSerializer(ModelSerializer):
     class Meta:
         model = ItemType
-        fields = ["slug", "name", "item_schema", "activity_schema"]
+        fields = ["slug", "name", "item_schema", "activity_schema", "name_schema"]
 
 
 class ActivityListSerializer(ModelSerializer):

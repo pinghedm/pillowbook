@@ -6,6 +6,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db.models.fields import EmailField, DateTimeField, TextField, BooleanField
 from django.db.models.fields.json import JSONField
+from django.contrib.postgres.fields import ArrayField
+
 
 from app.utils.common_utils import TOKEN_REGEX, gen_token
 from app.managers import UserManager
@@ -61,9 +63,25 @@ class ItemType(TimeStampedModel):
     activity_schema = JSONField(default=dict, blank=True)
     #  TODO: custom icon?
     name_schema = TextField(blank=True)
+    user: "models.ForeignKey[User, User]" = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )
+    auto_complete_config = JSONField(
+        default=dict, blank=True
+    )  # this will be config, per field for autocompleting against external providers - eg checking goodreads for book titles
 
     def __str__(self) -> str:
         return self.slug
+
+    @staticmethod
+    def update_defaults():
+        from app.schemas import default_item_types
+
+        for user in User.objects.all():
+            for item_type in default_item_types:
+                ItemType.objects.update_or_create(
+                    slug=item_type["slug"], user=user, defaults=item_type
+                )
 
 
 def _gen_item_token():

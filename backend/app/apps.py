@@ -6,10 +6,10 @@ class AppConfig(AppConfig):
     name = "app"
 
     def ready(self):
-        from app.models import ItemType
-        from app.schemas import default_item_types
+        try:
+            from app.models import ItemType
 
-        for item_type in default_item_types:
-            ItemType.objects.update_or_create(
-                slug=item_type["slug"], defaults=item_type
-            )
+            ItemType.update_defaults()
+        except:
+            ## this will get upset if there is a migration pending - thats fine
+            pass

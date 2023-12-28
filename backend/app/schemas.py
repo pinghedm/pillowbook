@@ -3,21 +3,14 @@ default_item_types = [
         "slug": "book",
         "name": "Book",
         "name_schema": "{{title}}",
+        "auto_complete_config": {},
         "item_schema": {
             "type": "object",
             "properties": {
-                "title": {"type": "string"},
-                "author": {"type": "string"},
-                "series": {"type": "string"},
-                "series_num": {"type": "number"},
-                "labelMap": {
-                    "type": "object",
-                    "patternProperties": {".*": "string"},
-                },
-                "autocompleteFields": {
-                    "type": "array",
-                    "const": ["title", "author", "series"],
-                },
+                "title": {"type": "string", "title": "Title"},
+                "author": {"type": "string", "title": "Author"},
+                "series": {"type": "string", "title": "Series"},
+                "series_num": {"type": "number", "title": "Series #"},
             },
             "additionalProperties": False,
             "required": ["title", "author"],
@@ -28,20 +21,13 @@ default_item_types = [
         "slug": "movie",
         "name": "Movie",
         "name_schema": "{{title}}",
+        "auto_complete_config": {},
         "item_schema": {
             "type": "object",
             "properties": {
-                "title": {"type": "string"},
-                "series": {"type": "string"},
-                "series_num": {"type": "number"},
-                "labelMap": {
-                    "type": "object",
-                    "patternProperties": {".*": "string"},
-                },
-                "autocompleteFields": {
-                    "type": "array",
-                    "const": ["title"],
-                },
+                "title": {"type": "string", "title": "Title"},
+                "series": {"type": "string", "title": "Series"},
+                "series_num": {"type": "number", "title": "Series #"},
             },
             "additionalProperties": False,
             "required": ["title"],
