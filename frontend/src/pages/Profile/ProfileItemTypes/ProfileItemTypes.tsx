@@ -7,6 +7,7 @@ import {
     FORM_FIELD_TYPES,
     NON_FORM_FIELD_PROPERTIES,
     useCreateItemType,
+    useDeleteItemType,
     useItemType,
     useItemTypes,
     useUpdateItemType,
@@ -80,14 +81,11 @@ const NewItemTypeModal = ({
                             if (!name) {
                                 return
                             }
-                            createItemTypeMutation.mutate(
-                                { slug, name },
-                                {
-                                    onSuccess: itemType => {
-                                        openEdit(itemType.slug)
-                                    },
+                            createItemTypeMutation.mutate(name, {
+                                onSuccess: itemType => {
+                                    openEdit(itemType.slug)
                                 },
-                            )
+                            })
                         }}
                     >
                         Create
@@ -107,6 +105,7 @@ const EditItemTypeModal = ({
 }) => {
     const { data: itemType } = useItemType(itemSlug)
     const updateItemTypeMutation = useUpdateItemType()
+    const deleteItemTypeMutation = useDeleteItemType()
 
     const formFieldProperties = useMemo(
         () =>
@@ -182,9 +181,8 @@ const EditItemTypeModal = ({
                 {Object.entries(formFieldProperties)
                     .filter(([k, v]) => typeof v !== 'boolean')
                     .map(([k, v]) => (
-                        <>
+                        <div key={k}>
                             <div
-                                key={k}
                                 style={{
                                     display: 'flex',
                                     flexDirection: 'row',
@@ -340,7 +338,7 @@ const EditItemTypeModal = ({
                                 </div>
                             </div>
                             <Divider />
-                        </>
+                        </div>
                     ))}
             </div>
             {newField !== undefined ? (
@@ -461,20 +459,31 @@ const EditItemTypeModal = ({
                     </Button>
                 </div>
             ) : null}
-            {newField === undefined ? (
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '5px' }}>
+                {newField === undefined ? (
+                    <Button
+                        type="primary"
+                        onClick={() => {
+                            setNewField({
+                                required: false,
+                                title: '',
+                                type: 'string',
+                            })
+                        }}
+                    >
+                        <PlusOutlined /> Add New Field
+                    </Button>
+                ) : null}
                 <Button
-                    type="primary"
+                    danger
                     onClick={() => {
-                        setNewField({
-                            required: false,
-                            title: '',
-                            type: 'string',
-                        })
+                        // TODO: probably have a confirmation on here, cause this is going to delete all items and activities of this type also
+                        deleteItemTypeMutation.mutate(itemType.slug, { onSuccess: onCancel })
                     }}
                 >
-                    <PlusOutlined /> Add New Field
+                    Delete Item Type
                 </Button>
-            ) : null}
+            </div>
         </Modal>
     )
 }

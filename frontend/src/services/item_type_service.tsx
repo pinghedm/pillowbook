@@ -61,19 +61,42 @@ export const useUpdateItemType = () => {
 }
 
 export const useCreateItemType = () => {
-    const _post = async (name: string, slug: string) => {
-        const res = await axios.post<ItemType>('/api/item_type', { name, slug })
+    const _post = async (name: string) => {
+        const res = await axios.post<ItemType>('/api/item_type', { name })
         return res.data
     }
 
     const queryClient = useQueryClient()
     const mutation = useMutation({
-        mutationFn: ({ slug, name }: { slug: string; name: string }) => _post(slug, name),
+        mutationFn: _post,
         onMutate: () => {
             queryClient.cancelQueries({ queryKey: ['itemTypes'] })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['itemTypes'] })
+        },
+    })
+    return mutation
+}
+
+export const useDeleteItemType = () => {
+    const _delete = async (slug: string) => {
+        const res = await axios.delete<ItemType>('/api/item_type/' + slug)
+        return res.data
+    }
+
+    const queryClient = useQueryClient()
+    const mutation = useMutation({
+        mutationFn: _delete,
+        onMutate: () => {
+            queryClient.cancelQueries({ queryKey: ['itemTypes'] })
+            queryClient.cancelQueries({ queryKey: ['items'] })
+            queryClient.cancelQueries({ queryKey: ['activities'] })
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['itemTypes'] })
+            queryClient.invalidateQueries({ queryKey: ['items'] })
+            queryClient.invalidateQueries({ queryKey: ['activities'] })
         },
     })
     return mutation

@@ -35,7 +35,7 @@ class ItemTypeList(generics.ListCreateAPIView):
         )
 
 
-class ItemTypeDetails(generics.RetrieveUpdateAPIView):
+class ItemTypeDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ItemTypeSerializer
     lookup_field = "slug"
