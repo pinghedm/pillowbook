@@ -1,5 +1,6 @@
-import { Alert, InputNumber } from 'antd'
+import { Alert, Button, InputNumber } from 'antd'
 import React, { useState } from 'react'
+import { useItemTypes } from 'services/item_type_service'
 import { useUpdateUserSettings, useUserSettings } from 'services/user_service'
 
 export interface ProfileBasicsProps {}
@@ -8,6 +9,7 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
     const { data: userSettings } = useUserSettings()
     const userSettingsMutation = useUpdateUserSettings()
     const [saving, setSaving] = useState(false)
+    const { data: itemTypes } = useItemTypes()
     return (
         <>
             <div style={{ height: '40px', width: '100%', marginBottom: '10px' }}>
@@ -63,6 +65,38 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                         )
                     }}
                 />
+            </div>
+            <div>
+                Item Types in Quick Menu
+                <div
+                    style={{ display: 'flex', flexDirection: 'row', gap: '5px', flexWrap: 'wrap' }}
+                >
+                    {itemTypes?.map(t => (
+                        <Button
+                            type={
+                                userSettings?.itemTypesInQuickMenu?.includes(t.slug)
+                                    ? 'primary'
+                                    : undefined
+                            }
+                            key={t.slug}
+                            onClick={() => {
+                                const oldItemTypes = [...(userSettings?.itemTypesInQuickMenu ?? [])]
+                                let newItemTypes
+                                if (oldItemTypes.includes(t.slug)) {
+                                    newItemTypes = oldItemTypes.filter(s => s !== t.slug)
+                                } else {
+                                    newItemTypes = [...oldItemTypes, t.slug]
+                                }
+                                userSettingsMutation.mutate({
+                                    ...userSettings,
+                                    itemTypesInQuickMenu: newItemTypes,
+                                })
+                            }}
+                        >
+                            {t.name}
+                        </Button>
+                    ))}
+                </div>
             </div>
         </>
     )

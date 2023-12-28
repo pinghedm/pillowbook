@@ -10,7 +10,7 @@ import {
     useLocation,
     useNavigate,
 } from 'react-router-dom'
-import { ConfigProvider, FloatButton, Layout, Menu, Spin, ThemeConfig } from 'antd'
+import { ConfigProvider, FloatButton, Layout, Menu, Modal, Spin, ThemeConfig } from 'antd'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Home from 'pages/Home/Home.lazy'
 import {
@@ -18,6 +18,7 @@ import {
     DownOutlined,
     EllipsisOutlined,
     PlusOutlined,
+    QuestionOutlined,
     UserOutlined,
     VideoCameraOutlined,
 } from '@ant-design/icons'
@@ -31,6 +32,10 @@ import ItemDetails from 'pages/Items/ItemDetails/ItemDetails.lazy'
 import Profile from 'pages/Profile/Profile.lazy'
 import ProfileBasics from 'pages/Profile/ProfileBasics/ProfileBasics.lazy'
 import ProfileItemTypes from 'pages/Profile/ProfileItemTypes/ProfileItemTypes.lazy'
+import { useItemTypes } from 'services/item_type_service'
+import { useUserSettings } from 'services/user_service'
+import { ItemIconByItemType } from 'services/item_service'
+import AddActivityModal from 'pages/AddActivityModal/AddActivityModal.lazy'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -74,9 +79,34 @@ const LoggedInRoot = () => {
     )
     const navigate = useNavigate()
     const logoutMutation = useLogout()
+    const { data: itemTypes } = useItemTypes()
+    const { data: userSettings } = useUserSettings()
+
+    const itemTypesInQuickMenu = useMemo(() => {
+        const includedSlugs = userSettings?.itemTypesInQuickMenu ?? ['book', 'movie']
+        const includedItemTypes = (itemTypes ?? []).filter(it => includedSlugs.includes(it.slug))
+        return includedItemTypes
+    }, [itemTypes, userSettings])
+
+    const [addActivityModalOpen, setAddActivityModalOpen] = useState(false)
 
     return (
         <Layout style={{ height: '100vh', width: '100vw' }}>
+            <Modal
+                open={addActivityModalOpen}
+                onCancel={() => {
+                    setAddActivityModalOpen(false)
+                }}
+                footer={null}
+                maskClosable
+                closable={false}
+            >
+                <AddActivityModal
+                    closeModal={() => {
+                        setAddActivityModalOpen(false)
+                    }}
+                />
+            </Modal>
             <Layout.Header
                 style={{
                     display: 'flex',
@@ -165,21 +195,24 @@ const LoggedInRoot = () => {
                     type="primary"
                     icon={<PlusOutlined />}
                 >
+                    {itemTypesInQuickMenu.map(it => (
+                        <FloatButton
+                            key={it.slug}
+                            icon={ItemIconByItemType?.[it.slug] ?? <QuestionOutlined />}
+                            description={it.name}
+                            tooltip={`Add New ${it.name} Activity`}
+                            href={`/activities/${it.slug}`}
+                        />
+                    ))}
+
                     <FloatButton
-                        icon={
-                            <Link to={{ pathname: '/activities/book' }}>
-                                <BookOutlined />
-                            </Link>
-                        }
+                        icon={<EllipsisOutlined />}
+                        description="Other"
+                        tooltip="Add New Activity"
+                        onClick={() => {
+                            setAddActivityModalOpen(true)
+                        }}
                     />
-                    <FloatButton
-                        icon={
-                            <Link to={{ pathname: '/activities/movie' }}>
-                                <VideoCameraOutlined />
-                            </Link>
-                        }
-                    />
-                    <FloatButton icon={<EllipsisOutlined />} />
                 </FloatButton.Group>
             </Layout.Content>
         </Layout>

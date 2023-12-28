@@ -28,6 +28,13 @@ def _gen_user_token():
     return f"U_{gen_token()}"
 
 
+def _default_user_settings():
+    return {
+        "ratingMax": 5,
+        "itemTypesInQuickMenu": ["book", "movie"],
+    }
+
+
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     USERNAME_FIELD = "email"
     EMAIL_FIELD = "email"
@@ -38,7 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     )
     token: "TextField[str, str]" = TextField(default=_gen_user_token, unique=True)
     is_staff: "BooleanField[bool, bool]" = BooleanField(default=False)
-    settings = JSONField(default=dict, blank=True)
+    settings = JSONField(default=_default_user_settings, blank=True)
 
     objects = UserManager()
 
@@ -48,7 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
 
 class ItemType(TimeStampedModel):
-    slug = models.SlugField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
     name = models.TextField()
     item_schema = JSONField(default=dict, blank=True)
     activity_schema = JSONField(default=dict, blank=True)

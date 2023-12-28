@@ -3,6 +3,7 @@ import axios from 'axios'
 
 export interface UserSettings {
     ratingMax?: number
+    itemTypesInQuickMenu?: string[]
 }
 
 export const useUserSettings = () => {
