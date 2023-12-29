@@ -52,9 +52,11 @@ export const useUpdateItemType = () => {
             _patch(slug, patch),
         onMutate: () => {
             queryClient.cancelQueries({ queryKey: ['itemTypes'] })
+            queryClient.cancelQueries({ queryKey: ['autocomplete'] })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['itemTypes'] })
+            queryClient.invalidateQueries({ queryKey: ['autocomplete'] })
         },
     })
     return mutation
@@ -100,4 +102,19 @@ export const useDeleteItemType = () => {
         },
     })
     return mutation
+}
+
+export const useItemTypeAutoCompleteSuggestions = (itemSlug?: string) => {
+    const _get = async (itemSlug: string) => {
+        const res = await axios.get<Record<string, (string | number)[]>>(
+            '/api/get_autocomplete_suggestions/' + itemSlug,
+        )
+        return res.data
+    }
+    const query = useQuery({
+        queryKey: ['autocomplete', itemSlug],
+        queryFn: () => _get(itemSlug ?? ''),
+        enabled: !!itemSlug,
+    })
+    return query
 }

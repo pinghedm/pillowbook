@@ -25,11 +25,11 @@ export interface ActivityDetail {
     item: string // token
     item_type: string // slug
 
-    start_time: string // isoformat
-    end_time: string // isoformat
+    start_time?: string // isoformat
+    end_time?: string // isoformat
     finished: boolean
 
-    rating: number
+    rating?: number
     notes: string
     info: Record<string, any>
 }
@@ -49,9 +49,11 @@ export const useCreateActivity = () => {
         mutationFn: (newActivity: CreateActivityType) => _post(newActivity),
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: ['activities'] })
+            await queryClient.cancelQueries({ queryKey: ['autocomplete'] })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['activities'] })
+            queryClient.invalidateQueries({ queryKey: ['autocomplete'] })
         },
     })
     return mutation

@@ -7,6 +7,7 @@ from app.api.views import (
     ItemTypeDetails,
     ItemTypeList,
     UserDetails,
+    get_item_autocomplete_values,
 )
 from app.utils.common_utils import TOKEN_REGEX
 
@@ -19,4 +20,8 @@ urlpatterns = [
     path("item", ItemList.as_view()),
     re_path(f"^item/(?P<token>I_{TOKEN_REGEX})", ItemDetails.as_view()),
     re_path("^settings/(?P<pk>\d+)", UserDetails.as_view()),
+    re_path(
+        f"^get_autocomplete_suggestions/(?P<item_slug>[\\w_-]+)",
+        get_item_autocomplete_values,
+    ),
 ]

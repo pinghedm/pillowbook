@@ -1,22 +1,14 @@
 import { RJSFSchema } from '@rjsf/utils'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useItemType } from 'services/item_type_service'
+import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import validator from '@rjsf/validator-ajv8'
-import {
-    AutoComplete,
-    InputNumber,
-    Spin,
-    Form,
-    Button,
-    Divider,
-    Checkbox,
-    DatePicker,
-    Input,
-} from 'antd'
+import { AutoComplete, InputNumber, Spin, Form, Button, Divider, Checkbox, Input } from 'antd'
+import DatePicker from 'components/DatePicker'
 import { capitalizeWords } from 'services/utils'
 import { useCreateActivity } from 'services/activities_service'
 import { useUserSettings } from 'services/user_service'
+import { DateTime } from 'luxon'
 export interface AddActivityProps {}
 
 const AddActivity = ({}: AddActivityProps) => {
@@ -55,6 +47,10 @@ const AddActivity = ({}: AddActivityProps) => {
     }, [itemType])
 
     const createActivityMutation = useCreateActivity()
+    // form values are not updating correctly for these guys, so for now just control them ourselves
+    const [dateRangeStart, setDateRangeStart] = useState<DateTime | null>(null)
+    const [dateRangeEnd, setDateRangeEnd] = useState<DateTime | null>(null)
+    const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
 
     if (!itemType) {
         return <Spin />
@@ -69,6 +65,34 @@ const AddActivity = ({}: AddActivityProps) => {
                 labelCol={{ span: 1 }}
                 onFinish={vals => {
                     console.log(vals)
+                    const formData = { ...vals }
+                    const activityData = {
+                        start_time: dateRangeStart?.toISO() ?? undefined,
+                        end_time: dateRangeEnd?.toISO() ?? undefined,
+                        finished: vals.activity__Finished,
+                        rating: vals.activity__Rating,
+                        notes: vals.activity__Notes,
+                        info: {},
+                    }
+                    const itemData = Object.fromEntries(
+                        Object.entries(formData).filter(
+                            ([k, v]) => !Object.keys(activityData).includes(k),
+                        ),
+                    )
+                    createActivityMutation.mutate(
+                        {
+                            activityDetails: activityData,
+                            itemDetails: {
+                                item_type: itemType.slug,
+                                info: itemData,
+                            },
+                        },
+                        {
+                            onSuccess: activity => {
+                                navigate({ pathname: activity.token })
+                            },
+                        },
+                    )
                 }}
             >
                 {Object.entries(itemType.item_schema.properties ?? {}).map(
@@ -88,7 +112,16 @@ const AddActivity = ({}: AddActivityProps) => {
                                 ]}
                             >
                                 {fieldData.type === 'string' ? (
-                                    <AutoComplete style={{ maxWidth: '300px' }} />
+                                    <AutoComplete
+                                        allowClear
+                                        filterOption
+                                        style={{ maxWidth: '300px' }}
+                                        options={autocompleteChoices?.[fieldName].map(v => ({
+                                            value: v,
+                                            label: v,
+                                            key: v,
+                                        }))}
+                                    />
                                 ) : fieldData.type === 'number' ? (
                                     <InputNumber />
                                 ) : (
@@ -99,27 +132,57 @@ const AddActivity = ({}: AddActivityProps) => {
                 )}
                 <Divider />
                 <Form.Item
-                    name="finished"
+                    name="activity__Finished"
                     label="Finished?"
                     valuePropName="checked"
                 >
                     <Checkbox />
                 </Form.Item>
                 <Form.Item
-                    name="range"
                     label="Date Range"
+                    getValueProps={i => ({ value: DateTime.fromJSDate(i) })}
                 >
-                    <DatePicker.RangePicker />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <div>
+                            <DatePicker.RangePicker
+                                showTime
+                                allowEmpty={[true, true]}
+                                value={[dateRangeStart, dateRangeEnd]}
+                                onChange={dates => {
+                                    setDateRangeStart(dates?.[0] ?? null)
+                                    setDateRangeEnd(dates?.[1] ?? null)
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '15px' }}>
+                            <Button
+                                type="text"
+                                onClick={() => {
+                                    setDateRangeStart(DateTime.now())
+                                }}
+                            >
+                                Set Start To Now
+                            </Button>
+                            <Button
+                                type="text"
+                                onClick={() => {
+                                    setDateRangeEnd(DateTime.now())
+                                }}
+                            >
+                                Set End To Now
+                            </Button>
+                        </div>
+                    </div>
                 </Form.Item>
 
                 <Form.Item
-                    name="rating"
+                    name="activity__Rating"
                     label="Rating"
                 >
                     <InputNumber max={userSettings?.ratingMax ?? 5} />
                 </Form.Item>
                 <Form.Item
-                    name="note"
+                    name="activity__Notes"
                     label="Notes"
                 >
                     <Input.TextArea style={{ maxWidth: '400px' }} />
@@ -133,49 +196,6 @@ const AddActivity = ({}: AddActivityProps) => {
                     </Button>
                 </Form.Item>
             </Form>
-            {/*<Form
-                uiSchema={{
-                    'ui:submitButtonOptions': {
-                        props: { type: 'primary' },
-                    },
-                }}
-                schema={filteredSchema}
-                validator={validator}
-                onChange={e => {
-                    console.log(e)
-                }}
-                onSubmit={e => {
-                    const formData = e.formData
-                    createActivityMutation.mutate(
-                        {
-                            activityDetails: {
-                                start_time: formData.start_time,
-                                end_time: formData.end_time || new Date().toISOString(),
-                                finished: formData.finished,
-                                rating: formData.rating,
-                                notes: formData.notes,
-                                info: formData.info,
-                            },
-                            itemDetails: {
-                                item_type: itemType.slug,
-                                info: Object.fromEntries(
-                                    Object.entries(formData).filter(([k, v]) =>
-                                        Object.keys(
-                                            itemType?.item_schema?.properties ?? {},
-                                        ).includes(k),
-                                    ),
-                                ),
-                            },
-                        },
-                        {
-                            onSuccess: activity => {
-                                navigate({ pathname: activity.token })
-                            },
-                        },
-                    )
-                }}
-                onError={e => console.log(e)}
-            />*/}
         </div>
     )
 }

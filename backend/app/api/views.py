@@ -1,10 +1,11 @@
-from django.http import Http404
+from django.contrib.auth.decorators import login_required
+from django.http import Http404, HttpRequest, JsonResponse
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 from rest_framework.response import Response
-
+import jsonschema
 from app.models import Activity, Item, ItemType, User
 from app.serializers import (
     ActivityDetailSerializer,
@@ -44,6 +45,8 @@ class ItemTypeDetails(generics.RetrieveUpdateDestroyAPIView):
         slug = self.kwargs["slug"]
         return ItemType.objects.filter(slug=slug, user=self.request.user)
 
+    # TODO: validate in update that any changes to schema are valid?
+
 
 class ActivityDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
@@ -70,6 +73,10 @@ class ActivityList(generics.ListCreateAPIView):
         item_type_slug = item_details.pop("item_type")
         item_type = get_object_or_404(ItemType, slug=item_type_slug, user=request.user)
         item_required_fields = item_type.item_schema["required"]
+        try:
+            jsonschema.validate(item_details["info"], item_type.item_schema)
+        except jsonschema.exceptions.ValidationError as e:
+            return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
 
         item, _ = Item.objects.get_or_create(
             **{
@@ -112,6 +119,8 @@ class ItemDetails(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user, token=self.kwargs["token"])
 
+    # TODO: validate incoming updates against the schema
+
 
 class UserDetails(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
@@ -119,3 +128,18 @@ class UserDetails(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return User.objects.filter(pk=self.request.user.pk)
+
+
+@login_required
+def get_item_autocomplete_values(request: HttpRequest, item_slug: str) -> JsonResponse:
+    item_type = get_object_or_404(ItemType, user=request.user, slug=item_slug)
+    auto_complete_choices = {}
+    for field_name in item_type.item_schema["properties"].keys():
+        vals = (
+            Item.objects.filter(user=request.user, item_type__slug=item_slug)
+            .values_list(f"info__{field_name}", flat=True)
+            .distinct()
+        )
+        auto_complete_choices[field_name] = [v for v in vals if v is not None]
+
+    return JsonResponse(auto_complete_choices)

@@ -59,9 +59,11 @@ export const useUpdateItem = () => {
             _patch(token, patch),
         onMutate: () => {
             queryClient.cancelQueries({ queryKey: ['items'] })
+            queryClient.cancelQueries({ queryKey: ['autocomplete'] })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['items'] })
+            queryClient.invalidateQueries({ queryKey: ['autocomplete'] })
         },
     })
     return mutation
