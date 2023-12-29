@@ -9,6 +9,7 @@ import { capitalizeWords } from 'services/utils'
 import { useCreateActivity } from 'services/activities_service'
 import { useUserSettings } from 'services/user_service'
 import { DateTime } from 'luxon'
+import { StarFilled } from '@ant-design/icons'
 export interface AddActivityProps {}
 
 const AddActivity = ({}: AddActivityProps) => {
@@ -189,6 +190,7 @@ const AddActivity = ({}: AddActivityProps) => {
                 </Form.Item>
                 <Form.Item>
                     <Button
+                        loading={createActivityMutation.isPending}
                         type="primary"
                         htmlType="submit"
                     >

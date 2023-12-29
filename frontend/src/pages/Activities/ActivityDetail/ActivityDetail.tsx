@@ -1,13 +1,15 @@
+import { StarFilled } from '@ant-design/icons'
 import { RJSFSchema } from '@rjsf/utils'
-import React, { useMemo } from 'react'
+import { AutoComplete, Button, Checkbox, Divider, Form, Input, InputNumber, Spin } from 'antd'
+import DatePicker from 'components/DatePicker'
+import { DateTime } from 'luxon'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useActivity, useUpdateActivity } from 'services/activities_service'
 import { useItem } from 'services/item_service'
-import { useItemType } from 'services/item_type_service'
+import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
 import { capitalizeWords } from 'services/utils'
-import validator from '@rjsf/validator-ajv8'
-import Form from '@rjsf/antd'
 
 export interface ActivityDetailProps {}
 
@@ -19,80 +21,172 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
     const { data: userSettings } = useUserSettings()
     const updateActivityMutation = useUpdateActivity()
 
-    const activityProperties: RJSFSchema = useMemo(
-        () => ({
-            rating: {
-                type: 'number',
-                title: 'Rating',
-                minimum: 0,
-                maximum: userSettings?.ratingMax ?? 5,
-            },
-            notes: { type: 'string', title: 'Notes' },
-            finished: { type: 'boolean', title: 'Finished' },
-        }),
-        [userSettings],
+    // form values are not updating correctly for these guys, so for now just control them ourselves
+    const [dateRangeStart, setDateRangeStart] = useState<DateTime | null>(
+        activity?.start_time ? DateTime.fromISO(activity.start_time) : null,
     )
-
-    const filteredSchema = useMemo(() => {
-        if (!itemType) {
-            return {}
+    const [dateRangeEnd, setDateRangeEnd] = useState<DateTime | null>(
+        activity?.end_time ? DateTime.fromISO(activity.end_time) : null,
+    )
+    useEffect(() => {
+        if (activity?.start_time && !dateRangeStart) {
+            setDateRangeStart(DateTime.fromISO(activity.start_time))
         }
-
-        // const autoCompleteFields: string[] = [...properties.autocompleteFields];
-        const schema = {
-            ...itemType.item_schema,
-            title: (
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '5px',
-                        alignItems: 'center',
-                    }}
-                >
-                    Activity for
-                    <Link to={{ pathname: '/items/' + item?.token ?? '' }}>{item?.name}</Link>
-                </div>
-            ),
-
-            properties: { ...itemType.item_schema.properties, ...activityProperties },
+        if (activity?.end_time && !dateRangeEnd) {
+            setDateRangeEnd(DateTime.fromISO(activity.end_time))
         }
-        return schema
-    }, [itemType, item])
-
+    }, [activity])
+    const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType?.slug ?? '')
+    if (!itemType || !activity || !item) {
+        return <Spin />
+    }
     return (
-        <Form
-            uiSchema={{
-                'ui:submitButtonOptions': {
-                    norender: true,
-                },
-            }}
-            schema={filteredSchema}
-            validator={validator}
-            formData={{
-                ...(item?.info ?? {}),
-                notes: activity?.notes ?? '',
-                rating: activity?.rating
-                    ? (activity.rating * (userSettings?.ratingMax ?? 5)).toFixed(2)
-                    : undefined,
-                finished: activity?.finished,
-            }}
-            onChange={e => {
-                if (!activity) {
-                    return
-                }
-                const formData = e.formData
-                const activityInfo = {
-                    rating: formData.rating / (userSettings?.ratingMax ?? 5),
-                    notes: formData.notes,
-                    finished: formData.finished,
-                }
-                updateActivityMutation.mutate({
-                    token: activity.token,
-                    patch: activityInfo,
-                })
-            }}
-        />
+        <div>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '5px',
+                    alignItems: 'center',
+                }}
+            >
+                Activity for
+                <Link to={{ pathname: '/items/' + item?.token ?? '' }}>{item?.name}</Link>
+            </div>
+            <Form
+                labelAlign="left"
+                labelWrap
+                labelCol={{ span: 1 }}
+                initialValues={{
+                    ...item?.info,
+                    activity__Finished: activity.finished,
+                    activity__Rating: activity?.rating
+                        ? activity?.rating * (userSettings?.ratingMax ?? 5)
+                        : undefined,
+                    activity__Notes: activity.notes,
+                }}
+                onFinish={vals => {
+                    if (!activity) {
+                        return
+                    }
+                    const activityInfo = {
+                        rating: vals.activity__Rating
+                            ? vals.activity__Rating / (userSettings?.ratingMax ?? 5)
+                            : undefined,
+                        notes: vals.activity__Notes as string,
+                        finished: vals.activity__Finished,
+                        start_time: dateRangeStart?.toISO() ?? undefined,
+                        end_time: dateRangeEnd?.toISO() ?? undefined,
+                    }
+                    updateActivityMutation.mutate({
+                        token: activity.token,
+                        patch: activityInfo,
+                    })
+                }}
+            >
+                {Object.entries(itemType.item_schema.properties ?? {}).map(
+                    ([fieldName, fieldData]) =>
+                        typeof fieldData === 'boolean' ? null : (
+                            <Form.Item
+                                key={fieldName}
+                                label={fieldData?.title ?? fieldName}
+                                name={fieldName}
+                                rules={[
+                                    {
+                                        required:
+                                            itemType.item_schema?.required?.includes(fieldName),
+                                        message: `${fieldData?.title ?? fieldName} is required`,
+                                    },
+                                ]}
+                            >
+                                {fieldData.type === 'string' ? (
+                                    <AutoComplete
+                                        disabled
+                                        allowClear
+                                        filterOption
+                                        style={{ maxWidth: '300px' }}
+                                        options={autocompleteChoices?.[fieldName].map(v => ({
+                                            value: v,
+                                            label: v,
+                                            key: v,
+                                        }))}
+                                    />
+                                ) : fieldData.type === 'number' ? (
+                                    <InputNumber disabled />
+                                ) : (
+                                    <div>UnsupportedType</div>
+                                )}
+                            </Form.Item>
+                        ),
+                )}
+                <Divider />
+                <Form.Item
+                    name="activity__Finished"
+                    label="Finished?"
+                    valuePropName="checked"
+                >
+                    <Checkbox />
+                </Form.Item>
+                <Form.Item
+                    label="Date Range"
+                    getValueProps={i => ({ value: DateTime.fromJSDate(i) })}
+                >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <div>
+                            <DatePicker.RangePicker
+                                showTime
+                                allowEmpty={[true, true]}
+                                value={[dateRangeStart, dateRangeEnd]}
+                                onChange={dates => {
+                                    setDateRangeStart(dates?.[0] ?? null)
+                                    setDateRangeEnd(dates?.[1] ?? null)
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'row', gap: '15px' }}>
+                            <Button
+                                type="text"
+                                onClick={() => {
+                                    setDateRangeStart(DateTime.now())
+                                }}
+                            >
+                                Set Start To Now
+                            </Button>
+                            <Button
+                                type="text"
+                                onClick={() => {
+                                    setDateRangeEnd(DateTime.now())
+                                }}
+                            >
+                                Set End To Now
+                            </Button>
+                        </div>
+                    </div>
+                </Form.Item>
+
+                <Form.Item
+                    name="activity__Rating"
+                    label="Rating"
+                >
+                    <InputNumber max={userSettings?.ratingMax ?? 5} />
+                </Form.Item>
+                <Form.Item
+                    name="activity__Notes"
+                    label="Notes"
+                >
+                    <Input.TextArea style={{ maxWidth: '400px' }} />
+                </Form.Item>
+                <Form.Item>
+                    <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={updateActivityMutation.isPending}
+                    >
+                        Update
+                    </Button>
+                </Form.Item>
+            </Form>
+        </div>
     )
 }
 
