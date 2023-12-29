@@ -213,6 +213,7 @@ const LoggedInRoot = () => {
                             description={it.name}
                             tooltip={`Add New ${it.name} Activity`}
                             href={`/activities/${it.slug}`}
+                            shape="square"
                         />
                     ))}
 
@@ -223,6 +224,7 @@ const LoggedInRoot = () => {
                         onClick={() => {
                             setAddActivityModalOpen(true)
                         }}
+                        shape="square"
                     />
                 </FloatButton.Group>
             </Layout.Content>
