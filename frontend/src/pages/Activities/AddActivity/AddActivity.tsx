@@ -77,7 +77,7 @@ const AddActivity = ({}: AddActivityProps) => {
                     }
                     const itemData = Object.fromEntries(
                         Object.entries(formData).filter(
-                            ([k, v]) => !Object.keys(activityData).includes(k),
+                            ([k, v]) => !Object.keys(activityData).map(k => k.toLowerCase()).includes(k.toLowerCase().replace('activity__','')),
                         ),
                     )
                     createActivityMutation.mutate(
