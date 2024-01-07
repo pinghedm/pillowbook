@@ -65,7 +65,6 @@ const AddActivity = ({}: AddActivityProps) => {
                 labelWrap
                 labelCol={{ span: 1 }}
                 onFinish={vals => {
-                    console.log(vals)
                     const formData = { ...vals }
                     const activityData = {
                         start_time: dateRangeStart?.toISO() ?? undefined,
@@ -76,9 +75,9 @@ const AddActivity = ({}: AddActivityProps) => {
                         info: {},
                     }
                     const itemData = Object.fromEntries(
-                        Object.entries(formData).filter(
-                            ([k, v]) => !Object.keys(activityData).includes(k),
-                        ),
+                        Object.entries(formData)
+                            .filter(([k, v]) => !Object.keys(activityData).includes(k))
+                            .filter(([k, v]) => !k.startsWith('activity__')),
                     )
                     createActivityMutation.mutate(
                         {
