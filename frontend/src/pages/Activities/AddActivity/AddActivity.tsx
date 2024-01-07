@@ -3,56 +3,42 @@ import React, { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import validator from '@rjsf/validator-ajv8'
-import { AutoComplete, InputNumber, Spin, Form, Button, Divider, Checkbox, Input } from 'antd'
+import {
+    AutoComplete,
+    InputNumber,
+    Spin,
+    Form,
+    Button,
+    Divider,
+    Checkbox,
+    Input,
+    Popover,
+    Select,
+} from 'antd'
 import DatePicker from 'components/DatePicker'
-import { capitalizeWords } from 'services/utils'
 import { useCreateActivity } from 'services/activities_service'
 import { useUserSettings } from 'services/user_service'
 import { DateTime } from 'luxon'
-import { StarFilled } from '@ant-design/icons'
+import { PlusOutlined } from '@ant-design/icons'
+import AddItem from 'pages/AddItem/AddItem.lazy'
+import { useForm } from 'antd/es/form/Form'
+import { ItemDetail } from 'services/item_service'
 export interface AddActivityProps {}
 
 const AddActivity = ({}: AddActivityProps) => {
     const navigate = useNavigate()
     const { type: itemTypeSlug } = useParams()
     const { data: itemType } = useItemType(itemTypeSlug)
+    const { data: parentItemType } = useItemType(itemType?.parent_slug ?? '')
     const { data: userSettings } = useUserSettings()
-
-    const activityProperties: RJSFSchema = useMemo(
-        () => ({
-            rating: {
-                type: 'number',
-                title: 'Rating',
-                minimum: 0,
-                maximum: userSettings?.ratingMax ?? 5,
-            },
-            notes: { type: 'string', title: 'Notes' },
-            finished: { type: 'boolean', title: 'Finished' },
-        }),
-        [userSettings],
-    )
-
-    const filteredSchema = useMemo(() => {
-        if (!itemType) {
-            return {}
-        }
-
-        // const autoCompleteFields: string[] = [...properties.autocompleteFields];
-        const schema = {
-            ...itemType.item_schema,
-            title: itemType.name,
-
-            properties: { ...itemType.item_schema.properties, ...activityProperties },
-        }
-        return schema
-    }, [itemType])
 
     const createActivityMutation = useCreateActivity()
     // form values are not updating correctly for these guys, so for now just control them ourselves
     const [dateRangeStart, setDateRangeStart] = useState<DateTime | null>(null)
     const [dateRangeEnd, setDateRangeEnd] = useState<DateTime | null>(null)
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
-
+    const [popoverOpen, setPopoverOpen] = useState(false)
+    const [form] = useForm()
     if (!itemType) {
         return <Spin />
     }
@@ -61,6 +47,7 @@ const AddActivity = ({}: AddActivityProps) => {
         <div>
             Add {itemType.name}
             <Form
+                form={form}
                 labelAlign="left"
                 labelWrap
                 labelCol={{ span: 1 }}
@@ -74,17 +61,20 @@ const AddActivity = ({}: AddActivityProps) => {
                         notes: vals.activity__Notes,
                         info: {},
                     }
-                    const itemData = Object.fromEntries(
+                    const itemData: ItemDetail['info'] = Object.fromEntries(
                         Object.entries(formData)
                             .filter(([k, v]) => !Object.keys(activityData).includes(k))
                             .filter(([k, v]) => !k.startsWith('activity__')),
                     )
+                    const itemParentToken = itemData?.['item__Parent']
+                    delete itemData['item__Parent']
                     createActivityMutation.mutate(
                         {
                             activityDetails: activityData,
                             itemDetails: {
                                 item_type: itemType.slug,
                                 info: itemData,
+                                parent_token: itemParentToken,
                             },
                         },
                         {
@@ -116,11 +106,7 @@ const AddActivity = ({}: AddActivityProps) => {
                                         allowClear
                                         filterOption
                                         style={{ maxWidth: '300px' }}
-                                        options={autocompleteChoices?.[fieldName].map(v => ({
-                                            value: v,
-                                            label: v,
-                                            key: v,
-                                        }))}
+                                        options={autocompleteChoices?.[fieldName]}
                                     />
                                 ) : fieldData.type === 'number' ? (
                                     <InputNumber />
@@ -130,6 +116,49 @@ const AddActivity = ({}: AddActivityProps) => {
                             </Form.Item>
                         ),
                 )}
+                {parentItemType ? (
+                    <Form.Item label={parentItemType.name}>
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: '5px',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Form.Item name="item__Parent">
+                                <Select
+                                    allowClear
+                                    style={{ width: '300px' }}
+                                    filterOption
+                                    options={autocompleteChoices?.[parentItemType.slug]}
+                                    showSearch
+                                />
+                            </Form.Item>
+                            <Popover
+                                open={popoverOpen}
+                                onOpenChange={o => {
+                                    setPopoverOpen(o)
+                                }}
+                                trigger={['click']}
+                                content={
+                                    <div style={{ width: '50vw' }}>
+                                        <AddItem
+                                            itemTypeSlug={parentItemType.slug}
+                                            onFinishCreated={newItem => {
+                                                form.setFieldValue('item__Parent', newItem.token)
+                                                setPopoverOpen(false)
+                                            }}
+                                            // setAsParentTo={item.token}
+                                        />
+                                    </div>
+                                }
+                            >
+                                <Button icon={<PlusOutlined />} />
+                            </Popover>
+                        </div>
+                    </Form.Item>
+                ) : null}
                 <Divider />
                 <Form.Item
                     name="activity__Finished"

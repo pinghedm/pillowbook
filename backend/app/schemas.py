@@ -1,5 +1,22 @@
 default_item_types = [
     {
+        "slug": "book-series",
+        "name": "Book Series",
+        "name_schema": "{{title}}",
+        "auto_complete_config": {},
+        "item_schema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "title": "Title",
+                }
+            },
+            "additionalProperties": False,
+            "required": ["title"],
+        },
+    },
+    {
         "slug": "book",
         "name": "Book",
         "name_schema": "{{title}}",
@@ -9,12 +26,12 @@ default_item_types = [
             "properties": {
                 "title": {"type": "string", "title": "Title"},
                 "author": {"type": "string", "title": "Author"},
-                "series": {"type": "string", "title": "Series"},
                 "series_num": {"type": "number", "title": "Series #"},
             },
             "additionalProperties": False,
             "required": ["title", "author"],
         },
+        "parent_slug": "book-series",
         "activity_schema": False,
     },
     {

@@ -14,6 +14,7 @@ export interface ItemTypeDetail extends ItemType {
     name_schema: string
     auto_complete_config: {}
     activity_schema: Record<string, any>
+    parent_slug: string
 }
 
 export const useItemTypes = () => {
@@ -106,7 +107,7 @@ export const useDeleteItemType = () => {
 
 export const useItemTypeAutoCompleteSuggestions = (itemSlug?: string) => {
     const _get = async (itemSlug: string) => {
-        const res = await axios.get<Record<string, (string | number)[]>>(
+        const res = await axios.get<Record<string, { value: string | number; label: string }[]>>(
             '/api/get_autocomplete_suggestions/' + itemSlug,
         )
         return res.data

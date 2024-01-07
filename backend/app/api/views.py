@@ -1,3 +1,4 @@
+from typing import Any, TypedDict
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpRequest, JsonResponse
 from rest_framework import generics, status
@@ -48,6 +49,30 @@ class ItemTypeDetails(generics.RetrieveUpdateDestroyAPIView):
     # TODO: validate in update that any changes to schema are valid?
 
 
+class ItemDetailsType(TypedDict):
+    info: dict[str, Any]
+
+
+def get_or_create_validated_item(
+    item_details: ItemDetailsType, item_type: ItemType, user: User
+):
+    item_required_fields = item_type.item_schema["required"]
+    try:
+        jsonschema.validate(item_details["info"], item_type.item_schema)
+    except jsonschema.exceptions.ValidationError as e:
+        return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
+
+    item, created = Item.objects.get_or_create(
+        **{
+            f"info__{k}": v
+            for k, v in item_details["info"].items()
+            if k in item_required_fields
+        },
+        defaults={**item_details, "item_type": item_type, "user": user},
+    )
+    return item, created
+
+
 class ActivityDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ActivityDetailSerializer
@@ -69,23 +94,18 @@ class ActivityList(generics.ListCreateAPIView):
         incoming = request.data
 
         item_details = incoming.pop("itemDetails")
+        item_parent_token = item_details.pop("parent_token", None)
 
         item_type_slug = item_details.pop("item_type")
         item_type = get_object_or_404(ItemType, slug=item_type_slug, user=request.user)
-        item_required_fields = item_type.item_schema["required"]
-        try:
-            jsonschema.validate(item_details["info"], item_type.item_schema)
-        except jsonschema.exceptions.ValidationError as e:
-            return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
 
-        item, _ = Item.objects.get_or_create(
-            **{
-                f"info__{k}": v
-                for k, v in item_details["info"].items()
-                if k in item_required_fields
-            },
-            defaults={**item_details, "item_type": item_type, "user": request.user},
+        item, created = get_or_create_validated_item(
+            item_details, item_type, request.user
         )
+        if item_parent_token:
+            parent = Item.objects.get(user=request.user, token=item_parent_token)
+            item.parent = parent
+            item.save()
 
         activity_details = incoming.pop("activityDetails")
         rating = activity_details.pop("rating", None)
@@ -103,12 +123,36 @@ class ActivityList(generics.ListCreateAPIView):
         return Response(serialized_obj, status=status.HTTP_201_CREATED)
 
 
-class ItemList(generics.ListAPIView):
+class ItemList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ItemListSerializer
 
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        incoming = {**request.data}
+
+        item_type_slug = incoming.pop("item_type")
+        set_as_parent_to = incoming.pop("setAsParentTo", None)
+        item_details = {**incoming}
+
+        item_type = get_object_or_404(ItemType, slug=item_type_slug, user=request.user)
+
+        item, actually_created = get_or_create_validated_item(
+            item_details, item_type, request.user
+        )
+
+        if set_as_parent_to:
+            child_item = Item.objects.get(user=request.user, token=set_as_parent_to)
+            child_item.parent = item
+            child_item.save()
+
+        serialized_item = self.serializer_class(item).data
+        return Response(
+            serialized_item,
+            status=status.HTTP_201_CREATED if actually_created else status.HTTP_200_OK,
+        )
 
 
 class ItemDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -119,7 +163,31 @@ class ItemDetails(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user, token=self.kwargs["token"])
 
-    # TODO: validate incoming updates against the schema
+    def partial_update(self, request, *args, **kwargs) -> Response:
+        incoming = request.data
+        parent_token = incoming.pop("parent_token", None)
+        item_details = {**incoming}
+
+        orig_obj = self.get_object()
+
+        item_required_fields = orig_obj.item_type.item_schema["required"]
+
+        try:
+            jsonschema.validate(item_details["info"], orig_obj.item_type.item_schema)
+        except jsonschema.exceptions.ValidationError as e:
+            return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
+
+        res = super().partial_update(request, *args, **kwargs)
+        if parent_token is not None:
+            obj = self.get_object()
+            if parent_token is False:
+                obj.parent = None
+            else:
+                parent = Item.objects.get(user=request.user, token=parent_token)
+                obj.parent = parent
+            obj.save()
+            res = Response(self.serializer_class(obj).data)
+        return res
 
 
 class UserDetails(generics.RetrieveUpdateAPIView):
@@ -140,6 +208,15 @@ def get_item_autocomplete_values(request: HttpRequest, item_slug: str) -> JsonRe
             .values_list(f"info__{field_name}", flat=True)
             .distinct()
         )
-        auto_complete_choices[field_name] = [v for v in vals if v is not None]
+        auto_complete_choices[field_name] = [
+            {"label": v, "valuel": v} for v in vals if v is not None
+        ]
+    if item_type.parent_slug:
+        items_of_parent_type = Item.objects.filter(
+            user=request.user, item_type__slug=item_type.parent_slug
+        )
+        auto_complete_choices[item_type.parent_slug] = [
+            {"label": i.name, "value": i.token} for i in items_of_parent_type
+        ]
 
     return JsonResponse(auto_complete_choices)

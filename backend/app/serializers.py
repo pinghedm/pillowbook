@@ -9,13 +9,20 @@ from app.models import Activity, Item, ItemType, User
 class ItemTypeListSerializer(ModelSerializer):
     class Meta:
         model = ItemType
-        fields = ["slug", "name"]
+        fields = ["slug", "name", "parent_slug"]
 
 
 class ItemTypeSerializer(ModelSerializer):
     class Meta:
         model = ItemType
-        fields = ["slug", "name", "item_schema", "activity_schema", "name_schema"]
+        fields = [
+            "slug",
+            "name",
+            "item_schema",
+            "activity_schema",
+            "name_schema",
+            "parent_slug",
+        ]
 
 
 class ActivityListSerializer(ModelSerializer):
@@ -65,16 +72,27 @@ class ItemListSerializer(ModelSerializer):
             "name",
             "rating",
             "item_type",
+            "parent_name",
         ]
 
 
 class ItemDetailSerializer(ModelSerializer):
     item_type = CharField(source="item_type.slug")
     token = CharField(read_only=True)
+    parent_token = CharField(source="parent.token", allow_null=True)
 
     class Meta:
         model = Item
-        fields = ["token", "rating", "notes", "item_type", "info", "name"]
+        fields = [
+            "token",
+            "rating",
+            "notes",
+            "item_type",
+            "info",
+            "name",
+            "parent_name",
+            "parent_token",
+        ]
 
 
 class UserSettingsSerializer(ModelSerializer):

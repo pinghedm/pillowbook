@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+import traceback
 
 
 class AppConfig(AppConfig):
@@ -11,5 +12,6 @@ class AppConfig(AppConfig):
 
             ItemType.update_defaults()
         except:
+            traceback.print_exc()
             ## this will get upset if there is a migration pending - thats fine
             pass

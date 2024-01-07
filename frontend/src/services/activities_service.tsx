@@ -35,7 +35,11 @@ export interface ActivityDetail {
 }
 
 export interface CreateActivityType {
-    itemDetails: { info: ItemDetail['info']; item_type: ItemDetail['item_type'] }
+    itemDetails: {
+        info: ItemDetail['info']
+        item_type: ItemDetail['item_type']
+        parent_token?: string
+    }
     activityDetails: Omit<ActivityDetail, 'token' | 'item' | 'item_type'>
 }
 

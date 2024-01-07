@@ -1,6 +1,16 @@
 import { StarFilled } from '@ant-design/icons'
 import { RJSFSchema } from '@rjsf/utils'
-import { AutoComplete, Button, Checkbox, Divider, Form, Input, InputNumber, Spin } from 'antd'
+import {
+    AutoComplete,
+    Button,
+    Checkbox,
+    Divider,
+    Form,
+    Input,
+    InputNumber,
+    Select,
+    Spin,
+} from 'antd'
 import DatePicker from 'components/DatePicker'
 import { DateTime } from 'luxon'
 import React, { useEffect, useMemo, useState } from 'react'
@@ -18,6 +28,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
     const { data: activity } = useActivity(token)
     const { data: item } = useItem(activity?.item)
     const { data: itemType } = useItemType(activity?.item_type)
+    const { data: parentItemType } = useItemType(itemType?.parent_slug)
     const { data: userSettings } = useUserSettings()
     const updateActivityMutation = useUpdateActivity()
 
@@ -50,7 +61,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                     alignItems: 'center',
                 }}
             >
-                Activity for
+                sdsadasd Activity for
                 <Link to={{ pathname: '/items/' + item?.token ?? '' }}>{item?.name}</Link>
             </div>
             <Form
@@ -64,6 +75,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                         ? activity?.rating * (userSettings?.ratingMax ?? 5)
                         : undefined,
                     activity__Notes: activity.notes,
+                    item__Parent: item?.parent_token,
                 }}
                 onFinish={vals => {
                     if (!activity) {
@@ -105,11 +117,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                                         allowClear
                                         filterOption
                                         style={{ maxWidth: '300px' }}
-                                        options={autocompleteChoices?.[fieldName].map(v => ({
-                                            value: v,
-                                            label: v,
-                                            key: v,
-                                        }))}
+                                        options={autocompleteChoices?.[fieldName]}
                                     />
                                 ) : fieldData.type === 'number' ? (
                                     <InputNumber disabled />
@@ -119,6 +127,21 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                             </Form.Item>
                         ),
                 )}
+                {parentItemType ? (
+                    <Form.Item
+                        label={parentItemType.name}
+                        name="item__Parent"
+                    >
+                        <Select
+                            disabled
+                            allowClear
+                            style={{ width: '300px' }}
+                            filterOption
+                            options={autocompleteChoices?.[parentItemType.slug]}
+                            showSearch
+                        />
+                    </Form.Item>
+                ) : null}
                 <Divider />
                 <Form.Item
                     name="activity__Finished"
