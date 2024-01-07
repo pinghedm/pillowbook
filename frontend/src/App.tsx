@@ -84,7 +84,7 @@ const LoggedInRoot = () => {
     const { data: userSettings } = useUserSettings()
 
     const itemTypesInQuickMenu = useMemo(() => {
-        const includedSlugs = userSettings?.itemTypesInQuickMenu ?? ['book', 'movie']
+        const includedSlugs = userSettings?.itemTypesInQuickMenu ?? ['book', 'movie','video_game']
         const includedItemTypes = (itemTypes ?? []).filter(it => includedSlugs.includes(it.slug))
         return includedItemTypes
     }, [itemTypes, userSettings])
