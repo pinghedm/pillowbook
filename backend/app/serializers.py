@@ -7,12 +7,16 @@ from app.models import Activity, Item, ItemType, User
 
 
 class ItemTypeListSerializer(ModelSerializer):
+    icon_url = CharField(read_only=True)
+
     class Meta:
         model = ItemType
-        fields = ["slug", "name", "parent_slug"]
+        fields = ["slug", "name", "parent_slug", "icon_url"]
 
 
 class ItemTypeSerializer(ModelSerializer):
+    icon_url = CharField(read_only=True)
+
     class Meta:
         model = ItemType
         fields = [
@@ -22,6 +26,7 @@ class ItemTypeSerializer(ModelSerializer):
             "activity_schema",
             "name_schema",
             "parent_slug",
+            "icon_url",
         ]
 
 

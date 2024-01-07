@@ -35,7 +35,6 @@ import ProfileBasics from 'pages/Profile/ProfileBasics/ProfileBasics.lazy'
 import ProfileItemTypes from 'pages/Profile/ProfileItemTypes/ProfileItemTypes.lazy'
 import { useItemTypes } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
-import { ItemIconByItemType } from 'services/item_service'
 import AddActivityModal from 'pages/AddActivityModal/AddActivityModal.lazy'
 
 const baseQueryClient = new QueryClient()
@@ -84,7 +83,7 @@ const LoggedInRoot = () => {
     const { data: userSettings } = useUserSettings()
 
     const itemTypesInQuickMenu = useMemo(() => {
-        const includedSlugs = userSettings?.itemTypesInQuickMenu ?? ['book', 'movie','video_game']
+        const includedSlugs = userSettings?.itemTypesInQuickMenu ?? ['book', 'movie', 'video_game']
         const includedItemTypes = (itemTypes ?? []).filter(it => includedSlugs.includes(it.slug))
         return includedItemTypes
     }, [itemTypes, userSettings])
@@ -209,7 +208,16 @@ const LoggedInRoot = () => {
                     {itemTypesInQuickMenu.map(it => (
                         <FloatButton
                             key={it.slug}
-                            icon={ItemIconByItemType?.[it.slug] ?? <QuestionOutlined />}
+                            icon={
+                                it.icon_url ? (
+                                    <img
+                                        style={{ height: '15px', width: '15px' }}
+                                        src={it.icon_url}
+                                    />
+                                ) : (
+                                    <QuestionOutlined />
+                                )
+                            }
                             description={it.name}
                             tooltip={`Add New ${it.name} Activity`}
                             href={`/activities/${it.slug}`}

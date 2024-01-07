@@ -22,6 +22,8 @@ FROM python:3.12-alpine
     COPY scripts .
 
     RUN chown user /app
+    RUN mkdir /app/media
+    RUN chown user /app/media
     USER user
 
     ENTRYPOINT 'scripts/entrypoint.sh'

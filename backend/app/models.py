@@ -11,6 +11,7 @@ from django.contrib.postgres.fields import ArrayField
 
 from app.utils.common_utils import TOKEN_REGEX, gen_token
 from app.managers import UserManager
+from backend.env import WEB_HOST
 
 
 class TimeStampedModel(models.Model):
@@ -56,12 +57,16 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         return _gen_user_token()
 
 
+def _item_type_icon_upload_helper(instance, filename):
+    now = datetime.datetime.now()
+    return f"{instance.user.pk}/{now.isoformat()}/{filename}"
+
+
 class ItemType(TimeStampedModel):
     slug = models.SlugField(max_length=200, unique=True)
     name = models.TextField()
     item_schema = JSONField(default=dict, blank=True)
     activity_schema = JSONField(default=dict, blank=True)
-    #  TODO: custom icon?
     name_schema = TextField(blank=True)
     user: "models.ForeignKey[User, User]" = models.ForeignKey(
         User, on_delete=models.CASCADE
@@ -70,6 +75,13 @@ class ItemType(TimeStampedModel):
         default=dict, blank=True
     )  # this will be config, per field for autocompleting against external providers - eg checking goodreads for book titles
     parent_slug = models.SlugField(max_length=200, null=True, blank=True)
+    icon = models.ImageField(
+        upload_to=_item_type_icon_upload_helper, null=True, blank=True
+    )
+
+    @property
+    def icon_url(self):
+        return f"{WEB_HOST}{self.icon.url}" if self.icon else ""
 
     def __str__(self) -> str:
         return self.slug

@@ -1,5 +1,7 @@
+from django.http import HttpResponse
 from django.urls import path, re_path
 from app.api.views import (
+    update_item_type_icon,
     ActivityDetail,
     ActivityList,
     ItemDetails,
@@ -10,9 +12,11 @@ from app.api.views import (
     get_item_autocomplete_values,
 )
 from app.utils.common_utils import TOKEN_REGEX
+from django.views.decorators.csrf import csrf_exempt
 
 
 urlpatterns = [
+    re_path("^item_type/(?P<slug>[\\w_-]+)/icon", update_item_type_icon),
     re_path("^item_type/(?P<slug>[\\w_-]+)", ItemTypeDetails.as_view()),
     path("item_type", ItemTypeList.as_view()),
     path("activity", ActivityList.as_view()),

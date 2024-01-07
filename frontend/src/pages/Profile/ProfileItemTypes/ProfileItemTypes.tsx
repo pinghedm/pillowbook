@@ -1,8 +1,22 @@
-import { DeleteOutlined, PlusOutlined, QuestionOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined, QuestionOutlined, UploadOutlined } from '@ant-design/icons'
 import { RJSFSchema } from '@rjsf/utils'
-import { Alert, Button, Card, Divider, Input, Modal, Select, Switch, Typography } from 'antd'
-import React, { useMemo, useState } from 'react'
-import { ItemIconByItemType } from 'services/item_service'
+import {
+    Alert,
+    AutoComplete,
+    Button,
+    Card,
+    Divider,
+    Input,
+    Modal,
+    Select,
+    Switch,
+    Typography,
+    Upload,
+    UploadFile,
+} from 'antd'
+import { RcFile } from 'antd/es/upload'
+import axios from 'axios'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
     FORM_FIELD_TYPES,
     NON_FORM_FIELD_PROPERTIES,
@@ -12,8 +26,10 @@ import {
     useItemTypes,
     useUpdateItemType,
 } from 'services/item_type_service'
-import { capitalizeWords } from 'services/utils'
+import { capitalizeWords, readCookie } from 'services/utils'
 import slugify from 'slugify'
+
+// TODO dooo these need to be separate components?
 
 const NewItemTypeModal = ({
     open,
@@ -27,6 +43,10 @@ const NewItemTypeModal = ({
     const [name, setName] = useState<string>()
     const slug = useMemo(() => slugify(name ?? '', { lower: true }), [name])
     const createItemTypeMutation = useCreateItemType()
+    const { data: itemTypes } = useItemTypes()
+    const [parentSlug, setParentSlug] = useState<string>()
+    const [icon, setIcon] = useState<UploadFile>()
+
     return (
         <Modal
             open={open}
@@ -73,6 +93,53 @@ const NewItemTypeModal = ({
                         }}
                     />
                 </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '5px',
+                        alignItems: 'center',
+                    }}
+                >
+                    Parent:
+                    <AutoComplete
+                        options={(itemTypes ?? []).map(it => ({ value: it.slug, label: it.name }))}
+                        style={{ width: '300px' }}
+                        value={parentSlug}
+                        onChange={val => {
+                            setParentSlug(val)
+                        }}
+                        onSelect={val => {
+                            setParentSlug(val)
+                        }}
+                        allowClear
+                    />
+                </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '5px',
+                        alignItems: 'center',
+                    }}
+                >
+                    Icon:
+                    <Upload
+                        accept=".png, .jpg, .svg, .gif"
+                        maxCount={1}
+                        showUploadList={{ showPreviewIcon: false }}
+                        listType="picture-card"
+                        beforeUpload={file => {
+                            setIcon(file)
+                            return false
+                        }}
+                        onRemove={file => {
+                            setIcon(undefined)
+                        }}
+                    >
+                        <Button icon={<UploadOutlined />} />
+                    </Upload>
+                </div>
                 <div>
                     <Button
                         type="primary"
@@ -81,11 +148,15 @@ const NewItemTypeModal = ({
                             if (!name) {
                                 return
                             }
-                            createItemTypeMutation.mutate(name, {
-                                onSuccess: itemType => {
-                                    openEdit(itemType.slug)
+                            console.log(icon)
+                            createItemTypeMutation.mutate(
+                                { name, parentSlug, icon: icon as RcFile },
+                                {
+                                    onSuccess: itemType => {
+                                        openEdit(itemType.slug)
+                                    },
                                 },
-                            })
+                            )
                         }}
                     >
                         Create
@@ -106,6 +177,16 @@ const EditItemTypeModal = ({
     const { data: itemType } = useItemType(itemSlug)
     const updateItemTypeMutation = useUpdateItemType()
     const deleteItemTypeMutation = useDeleteItemType()
+    const { data: itemTypes } = useItemTypes()
+    const [parentSlug, setParentSlug] = useState<string>()
+    useEffect(() => {
+        setParentSlug(undefined)
+    }, [itemType])
+    useEffect(() => {
+        if (!parentSlug && itemType?.parent_slug) {
+            setParentSlug(itemType.parent_slug)
+        }
+    }, [itemType?.parent_slug, parentSlug])
 
     const formFieldProperties = useMemo(
         () =>
@@ -122,6 +203,11 @@ const EditItemTypeModal = ({
         title: string
         type: (typeof FORM_FIELD_TYPES)[number]
     }>() // kind of a messy thing here - this type is a dict of any number of properties, but i only want to allow one, but i cant figure out how to index into this type
+
+    const iconUploadURL = useMemo(() => {
+        const baseURL = import.meta.env.VITE_API_URL_BASE
+        return baseURL + '/api/item_type/' + itemSlug + '/icon'
+    }, [itemSlug])
 
     if (!itemType) {
         return null
@@ -175,6 +261,67 @@ const EditItemTypeModal = ({
                         })
                     }}
                 />
+            </div>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '5px',
+                    alignItems: 'center',
+                }}
+            >
+                Parent:
+                <Select
+                    style={{ width: '300px' }}
+                    popupMatchSelectWidth={false}
+                    value={parentSlug}
+                    options={(itemTypes ?? []).map(it => ({ value: it.slug, label: it.slug }))}
+                    onChange={val => {
+                        setParentSlug(val)
+
+                        updateItemTypeMutation.mutate({
+                            slug: itemType.slug,
+                            patch: { parent_slug: val || false },
+                        })
+                    }}
+                    allowClear
+                    showSearch
+                />
+            </div>
+            <div
+                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
+            >
+                Icon:
+                {itemType.icon_url ? (
+                    <img
+                        style={{ height: '50px', width: '50px' }}
+                        src={itemType.icon_url}
+                    />
+                ) : (
+                    <QuestionOutlined />
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <Upload
+                        headers={{ 'X-CSRFToken': readCookie(axios.defaults.xsrfCookieName) ?? '' }}
+                        action={iconUploadURL}
+                        withCredentials
+                        style={{ width: '300px' }}
+                        accept=".png, .jpg, .svg, .gif"
+                        maxCount={1}
+                        showUploadList={{ showPreviewIcon: false }}
+                        listType="picture-card"
+                    >
+                        <Button icon={<UploadOutlined />}> Change Icon</Button>
+                    </Upload>
+                    <Button
+                        onClick={() => {
+                            axios.delete(iconUploadURL)
+                        }}
+                        disabled={!itemType.icon_url}
+                    >
+                        Remove Icon
+                    </Button>
+                </div>
             </div>
             <div>
                 <Typography.Title level={4}>Fields</Typography.Title>
@@ -521,41 +668,50 @@ const ProfileItemTypes = ({}: ProfileItemTypesProps) => {
                     flexWrap: 'wrap',
                 }}
             >
-                {(itemTypes ?? []).map(it => (
-                    <Card
-                        key={it.slug}
-                        onClick={() => {
-                            setEditingSlug(it.slug)
-                        }}
-                        hoverable
-                        cover={
-                            <div
-                                style={{
-                                    fontSize: '32px',
-                                    width: '100%',
-                                }}
-                            >
+                {(itemTypes ?? [])
+                    .sort((it1, it2) => it1.slug.localeCompare(it2.slug))
+                    .map(it => (
+                        <Card
+                            key={it.slug}
+                            onClick={() => {
+                                setEditingSlug(it.slug)
+                            }}
+                            hoverable
+                            cover={
                                 <div
                                     style={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        marginTop: '10px',
-                                        marginBottom: '10px',
+                                        fontSize: '32px',
+                                        width: '100%',
                                     }}
                                 >
-                                    {ItemIconByItemType?.[it.slug] ?? <QuestionOutlined />}
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            marginTop: '10px',
+                                            marginBottom: '10px',
+                                        }}
+                                    >
+                                        {it.icon_url ? (
+                                            <img
+                                                style={{ height: '50px', width: '50px' }}
+                                                src={it.icon_url}
+                                            />
+                                        ) : (
+                                            <QuestionOutlined />
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                    >
-                        <Card.Meta
-                            title={it.name}
-                            description={`Edit ${it.name} Type`}
-                        />
-                    </Card>
-                ))}
+                            }
+                        >
+                            <Card.Meta
+                                title={it.name}
+                                description={`Edit ${it.name} Type`}
+                            />
+                        </Card>
+                    ))}
                 <Card
                     key={'new'}
                     onClick={() => {

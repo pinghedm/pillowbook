@@ -1,9 +1,15 @@
-import { PlusOutlined, QuestionCircleOutlined, SearchOutlined, StarFilled } from '@ant-design/icons'
+import {
+    PlusOutlined,
+    QuestionCircleOutlined,
+    QuestionOutlined,
+    SearchOutlined,
+    StarFilled,
+} from '@ant-design/icons'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Cascader, Input, List } from 'antd'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ItemIconByItemType, useItems } from 'services/item_service'
+import { useItems } from 'services/item_service'
 import { useItemTypes } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
 import { capitalizeWords } from 'services/utils'
@@ -166,8 +172,18 @@ const Items = ({}: ItemsProps) => {
                                             gap: '10px',
                                         }}
                                     >
-                                        {ItemIconByItemType?.[item.item_type] ?? (
-                                            <QuestionCircleOutlined />
+                                        {itemTypes?.find(it => it.slug === item.item_type)
+                                            ?.icon_url ? (
+                                            <img
+                                                style={{ height: '50px', width: '50px' }}
+                                                src={
+                                                    itemTypes?.find(
+                                                        it => it.slug === item.item_type,
+                                                    )?.icon_url ?? ''
+                                                }
+                                            />
+                                        ) : (
+                                            <QuestionOutlined />
                                         )}
                                         {capitalizeWords(item.item_type)}
                                     </div>

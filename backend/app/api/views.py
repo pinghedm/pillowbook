@@ -1,6 +1,6 @@
 from typing import Any, TypedDict
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpRequest, JsonResponse
+from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
@@ -27,10 +27,24 @@ class ItemTypeList(generics.ListCreateAPIView):
         return ItemType.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        incoming = request.data
+        name = request.POST.get("name")
+        if not name:
+            return Response("", status=status.HTTP_400_BAD_REQUEST)
+        parent_slug = request.POST.get("parent_slug", None)
+        icon = request.FILES.get("icon")
+
         new_item_type = ItemType(
-            user=request.user, name=incoming["name"], slug=slugify(incoming["name"])
+            user=request.user,
+            name=name,
+            slug=slugify(name),
+            icon=icon if icon else None,
         )
+        if parent_slug:
+            try:
+                parent_type = ItemType.objects.get(user=request.user, slug=parent_slug)
+                new_item_type.parent_slug = parent_slug
+            except ItemType.DoesNotExist:
+                pass
         new_item_type.save()
         return Response(
             self.serializer_class(new_item_type).data, status=status.HTTP_201_CREATED
@@ -45,6 +59,19 @@ class ItemTypeDetails(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         slug = self.kwargs["slug"]
         return ItemType.objects.filter(slug=slug, user=self.request.user)
+
+    def partial_update(self, request, *args, **kwargs):
+        parent_slug = request.data.pop("parent_slug", None)
+        res = super().partial_update(request, *args, **kwargs)
+        if parent_slug is not None:
+            obj = self.get_object()
+            if parent_slug is False:
+                obj.parent_slug = None
+            else:
+                obj.parent_slug = parent_slug
+            obj.save()
+            res = Response(self.serializer_class(obj).data)
+        return res
 
     # TODO: validate in update that any changes to schema are valid?
 
@@ -220,3 +247,19 @@ def get_item_autocomplete_values(request: HttpRequest, item_slug: str) -> JsonRe
         ]
 
     return JsonResponse(auto_complete_choices)
+
+
+@login_required
+def update_item_type_icon(request, slug):
+    icon = request.FILES.get("file")
+    item_type = get_object_or_404(ItemType, user=request.user, slug=slug)
+    if request.method in {"POST", "DELETE"}:
+        try:
+            icon = request.FILES["file"]
+        except KeyError:
+            # if we are deleting the logo, we send an empty body
+            file = None
+        item_type.icon = icon
+        item_type.save()
+
+    return HttpResponse()

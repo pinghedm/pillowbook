@@ -13,7 +13,7 @@ const Login = ({}: LoginProps) => {
             style={{
                 width: '500px',
                 margin: 'auto',
-                marginTop: 'calc(50% - 250px)',
+                marginTop: '100px',
             }}
         >
             <Card

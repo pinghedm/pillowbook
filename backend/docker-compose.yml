@@ -22,6 +22,7 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - .:/app
+      - media_root:/app/media
 
     ports:
       - 8000:8000
@@ -35,4 +36,4 @@ services:
       - db
 
 volumes:
-  db-data:
+  db-data: media_root

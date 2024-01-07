@@ -158,3 +158,7 @@ CSRF_COOKIE_NAME = "csrftoken"
 # see https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-CSRF_COOKIE_HTTPONLY
 if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+
+
+MEDIA_ROOT = "/app/media"
+MEDIA_URL = "media/"

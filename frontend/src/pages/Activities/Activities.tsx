@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons'
 import { Button, Cascader, Input, List, Spin, Typography } from 'antd'
 import React, { ReactNode, useMemo } from 'react'
-import { ActivityIconByItemType, useActivities } from 'services/activities_service'
+import { useActivities } from 'services/activities_service'
 import { DateTime } from 'luxon'
 import { capitalizeWords } from 'services/utils'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -234,7 +234,17 @@ const Activities = ({}: ActivitiesProps) => {
                                             gap: '10px',
                                         }}
                                     >
-                                        {ActivityIconByItemType?.[item.item_type] ?? (
+                                        {itemTypes?.find(it => it.slug === item.item_type)
+                                            ?.icon_url ? (
+                                            <img
+                                                style={{ height: '50px', width: '50px' }}
+                                                src={
+                                                    itemTypes?.find(
+                                                        it => it.slug === item.item_type,
+                                                    )?.icon_url ?? ''
+                                                }
+                                            />
+                                        ) : (
                                             <QuestionCircleOutlined />
                                         )}
                                         {capitalizeWords(item.item_type)}

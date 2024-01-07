@@ -2,7 +2,6 @@ import { QuestionOutlined } from '@ant-design/icons'
 import { Card, Typography } from 'antd'
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { ItemIconByItemType } from 'services/item_service'
 import { useItemTypes } from 'services/item_type_service'
 
 export interface AddActivityModalProps {
@@ -48,7 +47,14 @@ const AddActivityModal = ({ closeModal }: AddActivityModalProps) => {
                                             marginBottom: '10px',
                                         }}
                                     >
-                                        {ItemIconByItemType?.[it.slug] ?? <QuestionOutlined />}
+                                        {it.icon_url ? (
+                                            <img
+                                                style={{ height: '50px', width: '50px' }}
+                                                src={it.icon_url}
+                                            />
+                                        ) : (
+                                            <QuestionOutlined />
+                                        )}
                                     </div>
                                 </div>
                             }

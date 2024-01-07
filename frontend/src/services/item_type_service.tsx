@@ -7,6 +7,7 @@ export const FORM_FIELD_TYPES = ['string', 'number'] as const
 export interface ItemType {
     slug: string
     name: string
+    icon_url?: string
 }
 
 export interface ItemTypeDetail extends ItemType {
@@ -41,15 +42,19 @@ export const useItemType = (slug?: string) => {
     return query
 }
 
+type UpdateItemTypeType = Partial<
+    Omit<ItemTypeDetail, 'parent_slug'> & { parent_slug?: string | boolean }
+>
+
 export const useUpdateItemType = () => {
-    const _patch = async (slug: string, patch: Partial<ItemTypeDetail>) => {
+    const _patch = async (slug: string, patch: UpdateItemTypeType) => {
         const res = await axios.patch<ItemTypeDetail>('/api/item_type/' + slug, patch)
         return res.data
     }
 
     const queryClient = useQueryClient()
     const mutation = useMutation({
-        mutationFn: ({ slug, patch }: { slug: string; patch: Partial<ItemTypeDetail> }) =>
+        mutationFn: ({ slug, patch }: { slug: string; patch: UpdateItemTypeType }) =>
             _patch(slug, patch),
         onMutate: () => {
             queryClient.cancelQueries({ queryKey: ['itemTypes'] })
@@ -64,14 +69,32 @@ export const useUpdateItemType = () => {
 }
 
 export const useCreateItemType = () => {
-    const _post = async (name: string) => {
-        const res = await axios.post<ItemType>('/api/item_type', { name })
+    const _post = async (name: string, parentSlug?: string, icon?: File) => {
+        const form = new FormData()
+        form.append('name', name)
+        if (parentSlug) {
+            form.append('parentSlug', parentSlug)
+        }
+        if (icon) {
+            form.append('icon', icon)
+        }
+        const res = await axios.post<ItemType>('/api/item_type', form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
         return res.data
     }
 
     const queryClient = useQueryClient()
     const mutation = useMutation({
-        mutationFn: _post,
+        mutationFn: ({
+            name,
+            parentSlug,
+            icon,
+        }: {
+            name: string
+            parentSlug?: string
+            icon?: File
+        }) => _post(name, parentSlug, icon),
         onMutate: () => {
             queryClient.cancelQueries({ queryKey: ['itemTypes'] })
         },
