@@ -127,7 +127,7 @@ class Item(TimeStampedModel):
         name_fields = re.findall(self.name_template_regex, self.item_type.name_schema)
         name = self.item_type.name_schema
         for field in name_fields:
-            name = name.replace("{{" + field + "}}", self.info.get(field, ""))
+            name = name.replace("{{" + field + "}}", str(self.info.get(field, "")))
         return name
 
     def __str__(self) -> str:
