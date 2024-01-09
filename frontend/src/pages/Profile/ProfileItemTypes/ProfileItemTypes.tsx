@@ -1,5 +1,4 @@
 import { DeleteOutlined, PlusOutlined, QuestionOutlined, UploadOutlined } from '@ant-design/icons'
-import { RJSFSchema } from '@rjsf/utils'
 import {
     Alert,
     AutoComplete,
@@ -133,7 +132,7 @@ const NewItemTypeModal = ({
                             setIcon(file)
                             return false
                         }}
-                        onRemove={file => {
+                        onRemove={(file: UploadFile) => {
                             setIcon(undefined)
                         }}
                     >

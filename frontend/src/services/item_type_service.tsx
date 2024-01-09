@@ -13,7 +13,7 @@ export interface ItemType {
 export interface ItemTypeDetail extends ItemType {
     item_schema: RJSFSchema
     name_schema: string
-    auto_complete_config: {}
+    auto_complete_config: Record<string, never>
     activity_schema: Record<string, any>
     parent_slug: string
 }

@@ -46,7 +46,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
         if (activity?.end_time && !dateRangeEnd) {
             setDateRangeEnd(DateTime.fromISO(activity.end_time))
         }
-    }, [activity])
+    }, [activity, dateRangeEnd, dateRangeStart])
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType?.slug ?? '')
     if (!itemType || !activity || !item) {
         return <Spin />
@@ -62,7 +62,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                 }}
             >
                 sdsadasd Activity for
-                <Link to={{ pathname: '/items/' + item?.token ?? '' }}>{item?.name}</Link>
+                <Link to={{ pathname: '/items/' + (item?.token ?? '') }}>{item?.name}</Link>
             </div>
             <Form
                 labelAlign="left"

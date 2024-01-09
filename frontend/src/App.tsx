@@ -99,7 +99,7 @@ const LoggedInRoot = () => {
                 return prev
             })
         }
-    }, [searchParams])
+    }, [searchParams, setSearchParams])
     return (
         <Layout style={{ height: '100vh', width: '100vw' }}>
             <Modal
