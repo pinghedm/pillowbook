@@ -3,3 +3,4 @@ psycopg[c]==3.1.16
 djangorestframework==3.14.0
 jsonschema==4.20.0
 Pillow==10.2.0
+django-filter==23.5

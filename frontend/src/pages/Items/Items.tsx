@@ -9,60 +9,54 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Cascader, Input, List } from 'antd'
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useItems } from 'services/item_service'
+import {
+    ItemFilterInfo,
+    ItemFilterInfoFilters,
+    useItemStaticFilters,
+    useItems,
+} from 'services/item_service'
 import { useItemTypes } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
-import { capitalizeWords } from 'services/utils'
-
-interface FilterInfo {
-    search?: string
-    filters: {
-        itemTypes?: string[]
-    }
-}
+import { capitalizeWords, usePagedResultData } from 'services/utils'
 
 export interface ItemsProps {}
 
+const PAGE_SIZE = 20
+
 const Items = ({}: ItemsProps) => {
-    const { data: items, isPending, fetchStatus } = useItems()
-    const { data: userSettings } = useUserSettings()
-    const { data: filterInfo } = useQuery<FilterInfo>({
-        queryKey: ['itemList', 'filterInfo'],
+    const { data: filterInfo } = useQuery<ItemFilterInfo>({
+        queryKey: ['itemList', 'filters'],
         queryFn: () => ({
-            filters: {},
+            pageNumber: 1,
         }),
         initialData: {
-            search: '',
-            filters: {},
+            pageNumber: 1,
         },
     })
+
+    const {
+        data: pagedItemResult,
+        isPending,
+        fetchStatus,
+    } = useItems(
+        filterInfo.pageNumber,
+        PAGE_SIZE,
+        filterInfo?.searchQuery,
+        filterInfo.filters,
+        filterInfo.ordering,
+    )
+
+    const { data: items, total: totalNumItems } = usePagedResultData(pagedItemResult)
+
+    const { data: userSettings } = useUserSettings()
+
     const queryClient = useQueryClient()
-    const { data: itemTypes } = useItemTypes()
-
-    const filteredItems = useMemo(() => {
-        const canonicalSearchQuery = (filterInfo?.search ?? '').trim().toLowerCase()
-        return (items ?? [])
-            .filter(i => i.name.toLowerCase().includes(canonicalSearchQuery))
-            .filter(i => {
-                const types = filterInfo.filters?.itemTypes ?? []
-
-                const typeMatch = types.length ? types.includes(i.item_type) : true
-
-                return typeMatch
-            })
-            .sort((a1, a2) => a1.name.localeCompare(a2.name))
-            .reverse()
-    }, [filterInfo, items])
-
-    const itemLength = useMemo(() => filteredItems.length, [filteredItems])
+    const { data: staticFilters } = useItemStaticFilters()
 
     const cascadeOptions = useMemo(() => {
-        // TODO: get from API when backend page
-        const uniqueItemTypes = Array.from(new Set(items?.map(i => i.item_type) ?? [])).sort()
-        const itemTypeBySlug = Object.fromEntries(itemTypes?.map(it => [it.slug, it]) ?? [])
         const options: {
             label: string
-            value: keyof FilterInfo['filters']
+            value: keyof ItemFilterInfoFilters
             isLeaf: false
             children: { label: string; value: string; key: string; isLeaf: true }[]
         }[] = [
@@ -70,16 +64,16 @@ const Items = ({}: ItemsProps) => {
                 label: 'Item Type',
                 value: 'itemTypes',
                 isLeaf: false,
-                children: uniqueItemTypes.map(it => ({
-                    label: itemTypeBySlug[it].name,
-                    value: it,
-                    key: it,
+                children: (staticFilters?.itemTypes ?? []).map(it => ({
+                    ...it,
+                    key: it.value,
                     isLeaf: true,
                 })),
             },
         ]
         return options
-    }, [items, itemTypes])
+    }, [staticFilters])
+
     return (
         <div style={{ height: '100%' }}>
             <div
@@ -96,11 +90,11 @@ const Items = ({}: ItemsProps) => {
                     allowClear
                     prefix={<SearchOutlined />}
                     style={{ flex: 2, maxWidth: '350px' }}
-                    value={filterInfo?.search ?? ''}
+                    value={filterInfo?.searchQuery ?? ''}
                     onChange={e => {
-                        queryClient.setQueryData(['activityList', 'filterInfo'], {
+                        queryClient.setQueryData(['itemList', 'filters'], {
                             ...filterInfo,
-                            search: e.target.value,
+                            searchQuery: e.target.value,
                         })
                     }}
                 />
@@ -111,20 +105,20 @@ const Items = ({}: ItemsProps) => {
                     multiple
                     options={cascadeOptions}
                     onChange={(value, selectedOptions) => {
-                        const filters: FilterInfo['filters'] = {}
+                        const filters: ItemFilterInfo['filters'] = {}
                         value
                             .filter(v => v.length === 2)
                             .forEach(([filterCat, filterVal]) => {
                                 // @ts-ignore - idk what it wants
                                 filters[filterCat] = [...(filters?.[filterCat] ?? []), filterVal]
                             })
-                        queryClient.setQueryData(['itemList', 'filterInfo'], {
+                        queryClient.setQueryData(['itemList', 'filters'], {
                             ...filterInfo,
                             filters,
                         })
                     }}
-                    value={Object.entries(filterInfo.filters).flatMap(([k, vs]) =>
-                        vs.flatMap(v => [k, v]),
+                    value={Object.entries(filterInfo?.filters ?? {}).flatMap(([k, vs]) =>
+                        vs.map(v => [k, v]),
                     )}
                 />
             </div>
@@ -137,10 +131,17 @@ const Items = ({}: ItemsProps) => {
                 }}
                 loading={isPending && fetchStatus !== 'idle'}
                 pagination={{
-                    pageSize: itemLength < 20 ? itemLength : 20,
+                    pageSize: PAGE_SIZE,
                     hideOnSinglePage: true,
+                    total: totalNumItems,
+                    onChange: (page: number, pageSize: number) => {
+                        queryClient.setQueryData(['itemList', 'filters'], {
+                            ...filterInfo,
+                            pageNumber: page,
+                        })
+                    },
                 }}
-                dataSource={filteredItems}
+                dataSource={items}
                 renderItem={(item, index) => (
                     <Link to={{ pathname: item.token }}>
                         <List.Item
@@ -172,15 +173,10 @@ const Items = ({}: ItemsProps) => {
                                             gap: '10px',
                                         }}
                                     >
-                                        {itemTypes?.find(it => it.slug === item.item_type)
-                                            ?.icon_url ? (
+                                        {item.icon_url ? (
                                             <img
                                                 style={{ height: '50px', width: '50px' }}
-                                                src={
-                                                    itemTypes?.find(
-                                                        it => it.slug === item.item_type,
-                                                    )?.icon_url ?? ''
-                                                }
+                                                src={item.icon_url}
                                             />
                                         ) : (
                                             <QuestionOutlined />

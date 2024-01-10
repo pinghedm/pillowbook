@@ -1,12 +1,14 @@
 from typing import Any, TypedDict
-from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
+
 from rest_framework import generics, status
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
+from rest_framework.request import Request
 from rest_framework.response import Response
 import jsonschema
+from rest_framework.views import APIView
 from app.models import Activity, Item, ItemType, User
 from app.serializers import (
     ActivityDetailSerializer,
@@ -17,6 +19,30 @@ from app.serializers import (
     ItemTypeSerializer,
     UserSettingsSerializer,
 )
+from rest_framework.pagination import PageNumberPagination
+
+from django_filters.rest_framework import (
+    BaseInFilter,
+    CharFilter,
+    DjangoFilterBackend,
+    FilterSet,
+)
+
+
+class PaginationBase(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+
+    def paginate_queryset(self, queryset, request, view=None):
+        # this would normally return a list, but we want a queryset
+        page = super().paginate_queryset(
+            queryset.values_list("pk", flat=True), request, view
+        )
+        return queryset.filter(pk__in=page)
+
+
+class CharInFilter(BaseInFilter, CharFilter):
+    pass
 
 
 class ItemTypeList(generics.ListCreateAPIView):
@@ -110,9 +136,44 @@ class ActivityDetail(generics.RetrieveUpdateDestroyAPIView):
         return Activity.objects.filter(user=self.request.user, token=token)
 
 
+class ActivityFilterSet(FilterSet):
+    itemTypes = CharInFilter(field_name="item__item_type__slug", lookup_expr="in")
+    items = CharInFilter(field_name="item__token", lookup_expr="in")
+    completed = CharInFilter(method="filter_by_completed")
+
+    def filter_by_completed(self, queryset, name, value):
+        # tragically cascader cant use bool, so we're going to get back the strings 'false' and 'true'
+        if "false" in value:
+            queryset = queryset.filter(finished=False)
+        if "true" in value:
+            queryset = queryset.filter(finished=True)
+        return queryset
+
+        # i think this is ok, cause i think the FE will never send back _both_
+
+    class Meta:
+        model = Activity
+        fields = []
+
+
+class ActivitySearchFilter(SearchFilter):
+    def get_search_fields(self, view: APIView, request: Request):
+        schemas = ItemType.objects.filter(user=request.user).values_list(
+            "item_schema", flat=True
+        )
+        fields = set()
+        for s in schemas:
+            fields |= set(s.get("required", []))
+
+        return [f"item__info__{f}" for f in fields if f]
+
+
 class ActivityList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ActivityListSerializer
+    pagination_class = PaginationBase
+    filter_backends = [DjangoFilterBackend, OrderingFilter, ActivitySearchFilter]
+    filterset_class = ActivityFilterSet
 
     def get_queryset(self):
         return Activity.objects.filter(user=self.request.user)
@@ -150,9 +211,33 @@ class ActivityList(generics.ListCreateAPIView):
         return Response(serialized_obj, status=status.HTTP_201_CREATED)
 
 
+class ItemFilterSet(FilterSet):
+    itemTypes = CharInFilter(field_name="item_type__slug", lookup_expr="in")
+
+    class Meta:
+        model = Item
+        fields = []
+
+
+class ItemSearchFilter(SearchFilter):
+    def get_search_fields(self, view: APIView, request: Request):
+        schemas = ItemType.objects.filter(user=request.user).values_list(
+            "item_schema", flat=True
+        )
+        fields = set()
+        for s in schemas:
+            fields |= set(s.get("required", []))
+
+        return [f"info__{f}" for f in fields if f]
+
+
 class ItemList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ItemListSerializer
+    pagination_class = PaginationBase
+    filter_backends = [DjangoFilterBackend, ItemSearchFilter, OrderingFilter]
+    filterset_class = ItemFilterSet
+    ordering_fields = ["rating", "item_type__slug", "parent__token"]
 
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user)
@@ -223,43 +308,3 @@ class UserDetails(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return User.objects.filter(pk=self.request.user.pk)
-
-
-@login_required
-def get_item_autocomplete_values(request: HttpRequest, item_slug: str) -> JsonResponse:
-    item_type = get_object_or_404(ItemType, user=request.user, slug=item_slug)
-    auto_complete_choices = {}
-    for field_name in item_type.item_schema["properties"].keys():
-        vals = (
-            Item.objects.filter(user=request.user, item_type__slug=item_slug)
-            .values_list(f"info__{field_name}", flat=True)
-            .distinct()
-        )
-        auto_complete_choices[field_name] = [
-            {"label": v, "valuel": v} for v in vals if v is not None
-        ]
-    if item_type.parent_slug:
-        items_of_parent_type = Item.objects.filter(
-            user=request.user, item_type__slug=item_type.parent_slug
-        )
-        auto_complete_choices[item_type.parent_slug] = [
-            {"label": i.name, "value": i.token} for i in items_of_parent_type
-        ]
-
-    return JsonResponse(auto_complete_choices)
-
-
-@login_required
-def update_item_type_icon(request, slug):
-    icon = request.FILES.get("file")
-    item_type = get_object_or_404(ItemType, user=request.user, slug=slug)
-    if request.method in {"POST", "DELETE"}:
-        try:
-            icon = request.FILES["file"]
-        except KeyError:
-            # if we are deleting the logo, we send an empty body
-            file = None
-        item_type.icon = icon
-        item_type.save()
-
-    return HttpResponse()

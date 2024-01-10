@@ -7,97 +7,63 @@ import {
 } from '@ant-design/icons'
 import { Button, Cascader, Input, List, Spin, Typography } from 'antd'
 import React, { ReactNode, useMemo } from 'react'
-import { useActivities } from 'services/activities_service'
+import {
+    FilterInfo,
+    FilterInfoFilters,
+    useActivities,
+    useActivityStaticFilters,
+} from 'services/activities_service'
 import { DateTime } from 'luxon'
-import { capitalizeWords } from 'services/utils'
+import { capitalizeWords, usePagedResultData } from 'services/utils'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useUserSettings } from 'services/user_service'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useItemTypes } from 'services/item_type_service'
 import { isFilesArray } from '@rjsf/utils'
 
-interface FilterInfo {
-    search?: string
-    filters: {
-        itemTypes?: string[]
-        completed?: string[] // tragically, cascader doesnt allow bool
-        items?: string[]
-    }
-}
-
+const PAGE_SIZE = 20
 export interface ActivitiesProps {}
 
 const Activities = ({}: ActivitiesProps) => {
-    const { data: activities, isPending, fetchStatus } = useActivities()
-    const { data: userSettings } = useUserSettings()
-
     const { data: filterInfo } = useQuery<FilterInfo>({
         queryKey: ['activityList', 'filterInfo'],
         queryFn: () => ({
-            filters: {},
+            pageNumber: 1,
         }),
         initialData: {
-            search: '',
-            filters: {},
+            pageNumber: 1,
         },
     })
+    const {
+        data: activitiesPagedResult,
+        isPending,
+        fetchStatus,
+    } = useActivities(filterInfo.pageNumber, PAGE_SIZE, filterInfo.search, filterInfo.filters)
+    const { data: activities, total: totalNumActivities } =
+        usePagedResultData(activitiesPagedResult)
+    const { data: userSettings } = useUserSettings()
 
-    const filteredActivities = useMemo(() => {
-        const canonicalSearchQuery = (filterInfo?.search ?? '').trim().toLowerCase()
-        return (activities ?? [])
-            .filter(a => a.item_name.toLowerCase().includes(canonicalSearchQuery))
-            .filter(a => {
-                const types = filterInfo.filters?.itemTypes ?? []
-                const items = filterInfo.filters?.items ?? []
-                const completes = filterInfo.filters?.completed ?? []
-
-                const typeMatch = types.length ? types.includes(a.item_type) : true
-                const itemMatch = items.length ? items.includes(a.item_name) : true
-                const completedMatch = completes.length
-                    ? completes.map(str => str === 'true').includes(a.finished)
-                    : true
-
-                return typeMatch && itemMatch && completedMatch
-            })
-            .sort((a1, a2) => (a1.end_time < a2.end_time ? -1 : 1))
-            .reverse()
-    }, [filterInfo, activities])
-    const activityLength = useMemo(() => filteredActivities.length, [filteredActivities])
     const queryClient = useQueryClient()
     const [_, setSearchParams] = useSearchParams()
 
-    const { data: itemTypes } = useItemTypes()
+    const { data: staticFilters } = useActivityStaticFilters()
 
     const cascadeOptions = useMemo(() => {
         // TODO: get from API when backend page
-        const uniqueItemTypes = Array.from(new Set(activities?.map(a => a.item_type) ?? [])).sort()
-        const uniqueFilteredItems = Array.from(
-            new Set(
-                (activities?.map(a => [a.item_name, a.item_type]) ?? [])
-                    .filter(([name, type]) => {
-                        const types = filterInfo.filters?.itemTypes ?? []
-                        const typeMatch = types.length ? types.includes(type) : true
-                        return typeMatch
-                    })
-                    .map(([name, type]) => name),
-            ),
-        ).sort()
 
-        const itemTypeBySlug = Object.fromEntries(itemTypes?.map(it => [it.slug, it]) ?? [])
         const options: {
             label: string
-            value: keyof FilterInfo['filters']
+            value: keyof FilterInfoFilters
             isLeaf: false
-            children: { label: string; value: string; key: string; isLeaf: true }[]
+            children: { label: string; value: string; isLeaf: true; key: string }[]
         }[] = [
             {
                 label: 'Item Type',
                 value: 'itemTypes',
                 isLeaf: false,
-                children: uniqueItemTypes.map(it => ({
-                    label: itemTypeBySlug[it].name,
-                    value: it,
-                    key: it,
+                children: (staticFilters?.itemTypes ?? []).map(it => ({
+                    ...it,
+                    key: it.value,
                     isLeaf: true,
                 })),
             },
@@ -105,10 +71,9 @@ const Activities = ({}: ActivitiesProps) => {
                 label: 'Item',
                 value: 'items',
                 isLeaf: false,
-                children: uniqueFilteredItems.map(name => ({
-                    label: name,
-                    value: name,
-                    key: name,
+                children: (staticFilters?.items ?? []).map(i => ({
+                    ...i,
+                    key: i.value,
                     isLeaf: true,
                 })),
             },
@@ -128,8 +93,7 @@ const Activities = ({}: ActivitiesProps) => {
             },
         ]
         return options
-    }, [activities, itemTypes, filterInfo])
-
+    }, [staticFilters])
     return (
         <div style={{ height: '100%' }}>
             <div
@@ -173,8 +137,8 @@ const Activities = ({}: ActivitiesProps) => {
                             filters,
                         })
                     }}
-                    value={Object.entries(filterInfo.filters).flatMap(([k, vs]) =>
-                        vs.flatMap(v => [k, v]),
+                    value={Object.entries(filterInfo?.filters ?? {}).flatMap(([k, vs]) =>
+                        vs.map(v => [k, v]),
                     )}
                 />
                 <Button
@@ -198,11 +162,18 @@ const Activities = ({}: ActivitiesProps) => {
                     overflowY: 'auto',
                 }}
                 pagination={{
-                    pageSize: activityLength < 20 ? activityLength : 20,
+                    pageSize: PAGE_SIZE,
                     hideOnSinglePage: true,
+                    total: totalNumActivities,
+                    onChange: (page: number, pageSize: number) => {
+                        queryClient.setQueryData(['activityList', 'filters'], {
+                            ...filterInfo,
+                            pageNumber: page,
+                        })
+                    },
                 }}
                 loading={isPending && fetchStatus !== 'idle'}
-                dataSource={filteredActivities}
+                dataSource={activities}
                 renderItem={(item, index) => (
                     <Link to={{ pathname: `${item.item_type}/${item.token}` }}>
                         <List.Item
@@ -234,15 +205,10 @@ const Activities = ({}: ActivitiesProps) => {
                                             gap: '10px',
                                         }}
                                     >
-                                        {itemTypes?.find(it => it.slug === item.item_type)
-                                            ?.icon_url ? (
+                                        {item.icon_url ? (
                                             <img
                                                 style={{ height: '50px', width: '50px' }}
-                                                src={
-                                                    itemTypes?.find(
-                                                        it => it.slug === item.item_type,
-                                                    )?.icon_url ?? ''
-                                                }
+                                                src={item.icon_url}
                                             />
                                         ) : (
                                             <QuestionCircleOutlined />

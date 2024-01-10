@@ -2,6 +2,17 @@ import { BookOutlined, LaptopOutlined, VideoCameraOutlined } from '@ant-design/i
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { ReactNode } from 'react'
+import { PaginatedResult, getDjangoShapedFilters, getOrderingString } from './utils'
+
+export interface ItemFilterInfoFilters {
+    itemTypes: string[]
+}
+export interface ItemFilterInfo {
+    pageNumber: number
+    searchQuery?: string
+    filters?: Partial<ItemFilterInfoFilters>
+    ordering?: { key: string; order: 'ascend' | 'descend' }
+}
 
 export interface Item {
     token: string
@@ -9,6 +20,7 @@ export interface Item {
     rating?: number
     item_type: string
     parent_item_type: string
+    icon_url: string
 }
 
 export interface ItemDetail {
@@ -22,13 +34,51 @@ export interface ItemDetail {
     parent_token?: string
 }
 
-export const useItems = () => {
+export const useItems = (
+    pageNumber: number,
+    pageSize: number,
+    search?: string,
+    filters?: ItemFilterInfo['filters'],
+    ordering?: { key: string; order: 'ascend' | 'descend' },
+) => {
     const _get = async () => {
-        const res = await axios.get<Item[]>('/api/item')
+        const res = await axios.get<PaginatedResult<Item>>('/api/item', {
+            params: {
+                page: pageNumber,
+                page_size: pageSize,
+                ordering: getOrderingString(ordering),
+                search,
+                ...getDjangoShapedFilters(filters ?? {}),
+            },
+        })
         return res.data
     }
 
-    const query = useQuery({ queryKey: ['items'], queryFn: _get })
+    const query = useQuery({
+        queryKey: [
+            'items',
+            pageNumber,
+            pageSize,
+            JSON.stringify(ordering),
+            search ?? '',
+            JSON.stringify(Object.entries(filters ?? {}).sort()),
+        ],
+        queryFn: _get,
+    })
+    return query
+}
+
+export const useItemStaticFilters = () => {
+    const _get = async () => {
+        const res = await axios.get<{
+            itemTypes: { value: string; label: string }[]
+        }>('/api/get_items_static_filters')
+        return res.data
+    }
+    const query = useQuery({
+        queryKey: ['items', 'staticFilters'],
+        queryFn: _get,
+    })
     return query
 }
 

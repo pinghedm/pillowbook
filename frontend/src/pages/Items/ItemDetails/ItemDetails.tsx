@@ -1,11 +1,8 @@
-import { RJSFSchema } from '@rjsf/utils'
 import { AutoComplete, Popover, Form, Input, InputNumber, Spin, Button, Select, Space } from 'antd'
-import React, { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { useItem, useUpdateItem, useItems } from 'services/item_service'
+import { useItem, useUpdateItem } from 'services/item_service'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
-import { capitalizeWords } from 'services/utils'
 import { PlusOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
 

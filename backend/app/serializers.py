@@ -1,3 +1,4 @@
+from os import read
 from django.db.models.base import Model
 from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
@@ -31,6 +32,7 @@ class ItemTypeSerializer(ModelSerializer):
 
 
 class ActivityListSerializer(ModelSerializer):
+    icon_url = CharField(source="item.item_type.icon_url", read_only=True)
     item_type = CharField(source="item.item_type.slug")
     item_name = CharField(source="item.name")
 
@@ -44,10 +46,12 @@ class ActivityListSerializer(ModelSerializer):
             "finished",
             "rating",
             "item_name",
+            "icon_url",
         ]
 
 
 class ActivityDetailSerializer(ModelSerializer):
+    icon_url = CharField(source="item.item_type.icon_url", read_only=True)
     item = SlugRelatedField(slug_field="token", queryset=Item.objects.all())
     item_type = CharField(source="item.item_type.slug")
     token = CharField(read_only=True)
@@ -64,27 +68,24 @@ class ActivityDetailSerializer(ModelSerializer):
             "rating",
             "notes",
             "info",
+            "icon_url",
         ]
 
 
 class ItemListSerializer(ModelSerializer):
     item_type = CharField(source="item_type.slug")
+    icon_url = CharField(read_only=True, source="item_type.icon_url")
 
     class Meta:
         model = Item
-        fields = [
-            "token",
-            "name",
-            "rating",
-            "item_type",
-            "parent_name",
-        ]
+        fields = ["token", "name", "rating", "item_type", "parent_name", "icon_url"]
 
 
 class ItemDetailSerializer(ModelSerializer):
     item_type = CharField(source="item_type.slug")
     token = CharField(read_only=True)
     parent_token = CharField(source="parent.token", allow_null=True)
+    icon_url = CharField(read_only=True, source="item_type.icon_url")
 
     class Meta:
         model = Item
@@ -97,6 +98,7 @@ class ItemDetailSerializer(ModelSerializer):
             "name",
             "parent_name",
             "parent_token",
+            "icon_url",
         ]
 
 

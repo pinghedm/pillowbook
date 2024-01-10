@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookOutlined, VideoCameraOutlined } from '@ant-design/icons'
 import { ReactNode } from 'react'
 
+import { PaginatedResult, getDjangoShapedFilters } from './utils'
+
 export interface Activity {
     token: string
     item_type: string
@@ -14,6 +16,8 @@ export interface Activity {
     finished: boolean
 
     rating: number
+
+    icon_url: string
 }
 
 export interface ActivityDetail {
@@ -59,13 +63,62 @@ export const useCreateActivity = () => {
     return mutation
 }
 
-export const useActivities = () => {
+export const useActivityStaticFilters = () => {
     const _get = async () => {
-        const res = await axios.get<Activity[]>('/api/activity')
+        const res = await axios.get<{
+            itemTypes: { value: string; label: string }[]
+            items: { value: string; label: string }[]
+        }>('/api/get_activities_static_filters')
+        return res.data
+    }
+    const query = useQuery({
+        queryKey: ['activities', 'staticFilters'],
+        queryFn: _get,
+    })
+    return query
+}
+
+export interface FilterInfoFilters {
+    // cascader options type wasnt happy when these were optional? so do this extra nonsense to appease it
+    itemTypes: string[]
+    completed: string[] // tragically, cascader doesnt allow bool
+    items: string[]
+}
+
+export interface FilterInfo {
+    pageNumber: number
+    search?: string
+    filters?: Partial<FilterInfoFilters>
+}
+
+export const useActivities = (
+    pageNumber: number,
+    pageSize: number,
+    searchQuery?: string,
+    filters?: FilterInfo['filters'],
+) => {
+    const _get = async () => {
+        const res = await axios.get<PaginatedResult<Activity>>('/api/activity', {
+            params: {
+                page: pageNumber,
+                page_size: pageSize,
+                search: searchQuery,
+                ...getDjangoShapedFilters(filters ?? {}),
+            },
+        })
         return res.data
     }
 
-    const query = useQuery({ queryKey: ['activities'], queryFn: _get })
+    const query = useQuery({
+        queryKey: [
+            'activities',
+            pageNumber,
+            pageSize,
+            searchQuery ?? '',
+            JSON.stringify(Object.entries(filters ?? {}).sort()),
+        ],
+        queryFn: _get,
+    })
     return query
 }
 
