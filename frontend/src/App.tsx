@@ -36,6 +36,7 @@ import ProfileItemTypes from 'pages/Profile/ProfileItemTypes/ProfileItemTypes.la
 import { useItemTypes } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
 import AddActivityModal from 'pages/AddActivityModal/AddActivityModal.lazy'
+import ProfileActivityDefaults from 'pages/Profile/ProfileActivityDefaults/ProfileActivityDefaults.lazy'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -150,8 +151,6 @@ const LoggedInRoot = () => {
                         },
                         { key: 'items', label: 'Items' },
                         { key: 'activities', label: 'Activities' },
-                        // { key: 'diary', label: 'Diary' },
-                        { key: 'history', label: 'History', disabled: true },
                     ]}
                     onClick={({ key }) => {
                         navigate({ pathname: key })
@@ -167,7 +166,6 @@ const LoggedInRoot = () => {
                         } else if (e.key === 'profile') {
                             navigate({ pathname: '/profile/basics' })
                         }
-                        console.log(e)
                     }}
                     mode="vertical"
                     triggerSubMenuAction="click"
@@ -265,6 +263,7 @@ const routes = [
         element: <Profile />,
         children: [
             { path: 'basics', element: <ProfileBasics /> },
+            { path: 'activityDefaults', element: <ProfileActivityDefaults /> },
             { path: 'itemTypes', element: <ProfileItemTypes /> },
         ],
     },

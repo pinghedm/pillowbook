@@ -147,7 +147,6 @@ const NewItemTypeModal = ({
                             if (!name) {
                                 return
                             }
-                            console.log(icon)
                             createItemTypeMutation.mutate(
                                 { name, parentSlug, icon: icon as RcFile },
                                 {

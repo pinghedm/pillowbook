@@ -4,6 +4,11 @@ import axios from 'axios'
 export interface UserSettings {
     ratingMax?: number
     itemTypesInQuickMenu?: string[]
+    activityDefaults: {
+        defaultStatus?: 'pending' | 'finished' | ''
+        defaultStartToNow?: boolean
+        defaultEndToNow?: boolean
+    }
 }
 
 export const useUserSettings = () => {

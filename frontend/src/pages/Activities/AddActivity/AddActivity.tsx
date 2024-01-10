@@ -1,5 +1,5 @@
 import { RJSFSchema } from '@rjsf/utils'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import validator from '@rjsf/validator-ajv8'
@@ -37,6 +37,15 @@ const AddActivity = ({}: AddActivityProps) => {
     // form values are not updating correctly for these guys, so for now just control them ourselves
     const [dateRangeStart, setDateRangeStart] = useState<DateTime | null>(null)
     const [dateRangeEnd, setDateRangeEnd] = useState<DateTime | null>(null)
+
+    useEffect(() => {
+        if (userSettings?.activityDefaults?.defaultEndToNow && !dateRangeEnd) {
+            setDateRangeEnd(DateTime.fromJSDate(new Date()))
+        }
+        if (userSettings?.activityDefaults?.defaultStartToNow && !dateRangeStart) {
+            setDateRangeStart(DateTime.fromJSDate(new Date()))
+        }
+    }, [userSettings, dateRangeStart, dateRangeEnd])
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
     const [popoverOpen, setPopoverOpen] = useState(false)
     const [form] = useForm()
@@ -48,7 +57,10 @@ const AddActivity = ({}: AddActivityProps) => {
         <div>
             Add {itemType.name}
             <Form
-                initialValues={{ activity__FinishedOrPending: '' }}
+                initialValues={{
+                    activity__FinishedOrPending:
+                        userSettings?.activityDefaults?.defaultStatus ?? '',
+                }}
                 form={form}
                 labelAlign="left"
                 labelWrap
