@@ -14,6 +14,7 @@ import {
     Input,
     Popover,
     Select,
+    Radio,
 } from 'antd'
 import DatePicker from 'components/DatePicker'
 import { useCreateActivity } from 'services/activities_service'
@@ -47,6 +48,7 @@ const AddActivity = ({}: AddActivityProps) => {
         <div>
             Add {itemType.name}
             <Form
+                initialValues={{ activity__FinishedOrPending: '' }}
                 form={form}
                 labelAlign="left"
                 labelWrap
@@ -56,7 +58,8 @@ const AddActivity = ({}: AddActivityProps) => {
                     const activityData = {
                         start_time: dateRangeStart?.toISO() ?? undefined,
                         end_time: dateRangeEnd?.toISO() ?? undefined,
-                        finished: vals.activity__Finished,
+                        finished: vals.activity__FinishedOrPending === 'finished',
+                        pending: vals.activity__FinishedOrPending === 'pending',
                         rating: vals.activity__Rating,
                         notes: vals.activity__Notes,
                         info: {},
@@ -161,11 +164,14 @@ const AddActivity = ({}: AddActivityProps) => {
                 ) : null}
                 <Divider />
                 <Form.Item
-                    name="activity__Finished"
-                    label="Finished?"
-                    valuePropName="checked"
+                    name="activity__FinishedOrPending"
+                    label="Status"
                 >
-                    <Checkbox />
+                    <Radio.Group>
+                        <Radio value="pending">Pending</Radio>
+                        <Radio value="finished">Finished</Radio>
+                        <Radio value="">None</Radio>
+                    </Radio.Group>
                 </Form.Item>
                 <Form.Item
                     label="Date Range"

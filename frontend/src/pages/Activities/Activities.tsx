@@ -91,6 +91,20 @@ const Activities = ({}: ActivitiesProps) => {
                     { value: 'false', label: 'False', key: 'false', isLeaf: true },
                 ],
             },
+            {
+                label: 'Pending',
+                value: 'pending',
+                isLeaf: false,
+                children: [
+                    {
+                        value: 'true',
+                        label: 'True',
+                        key: 'true',
+                        isLeaf: true,
+                    },
+                    { value: 'false', label: 'False', key: 'false', isLeaf: true },
+                ],
+            },
         ]
         return options
     }, [staticFilters])

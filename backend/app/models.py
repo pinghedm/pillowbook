@@ -158,6 +158,7 @@ class Activity(TimeStampedModel):
         null=True, blank=True
     )
     finished: "BooleanField[bool, bool]" = BooleanField(default=False)
+    pending: "BooleanField[bool, bool]" = BooleanField(default=False)
 
     rating = models.FloatField(
         null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)]

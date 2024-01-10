@@ -10,13 +10,11 @@ export interface Activity {
     token: string
     item_type: string
     item_name: string
-
     start_time: string // isoformat
     end_time: string // isoformat
     finished: boolean
-
+    pending: boolean
     rating: number
-
     icon_url: string
 }
 
@@ -28,6 +26,7 @@ export interface ActivityDetail {
     start_time?: string // isoformat
     end_time?: string // isoformat
     finished: boolean
+    pending: boolean
 
     rating?: number
     notes: string
@@ -83,6 +82,7 @@ export interface FilterInfoFilters {
     itemTypes: string[]
     completed: string[] // tragically, cascader doesnt allow bool
     items: string[]
+    pending: string[] // tragically, cascader doesnt allow bool
 }
 
 export interface FilterInfo {

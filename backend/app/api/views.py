@@ -140,6 +140,7 @@ class ActivityFilterSet(FilterSet):
     itemTypes = CharInFilter(field_name="item__item_type__slug", lookup_expr="in")
     items = CharInFilter(field_name="item__token", lookup_expr="in")
     completed = CharInFilter(method="filter_by_completed")
+    pending = CharInFilter(method="filter_by_pending")
 
     def filter_by_completed(self, queryset, name, value):
         # tragically cascader cant use bool, so we're going to get back the strings 'false' and 'true'
@@ -148,8 +149,15 @@ class ActivityFilterSet(FilterSet):
         if "true" in value:
             queryset = queryset.filter(finished=True)
         return queryset
-
         # i think this is ok, cause i think the FE will never send back _both_
+
+    def filter_by_pending(self, queryset, name, value):
+        # tragically cascader cant use bool, so we're going to get back the strings 'false' and 'true'
+        if "false" in value:
+            queryset = queryset.filter(pending=False)
+        if "true" in value:
+            queryset = queryset.filter(pending=True)
+        return queryset
 
     class Meta:
         model = Activity

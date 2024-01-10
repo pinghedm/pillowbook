@@ -47,6 +47,7 @@ class ActivityListSerializer(ModelSerializer):
             "rating",
             "item_name",
             "icon_url",
+            "pending",
         ]
 
 
@@ -69,6 +70,7 @@ class ActivityDetailSerializer(ModelSerializer):
             "notes",
             "info",
             "icon_url",
+            "pending",
         ]
 
 

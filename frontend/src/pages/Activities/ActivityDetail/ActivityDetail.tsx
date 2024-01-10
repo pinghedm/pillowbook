@@ -8,6 +8,7 @@ import {
     Form,
     Input,
     InputNumber,
+    Radio,
     Select,
     Spin,
 } from 'antd'
@@ -70,7 +71,11 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                 labelCol={{ span: 1 }}
                 initialValues={{
                     ...item?.info,
-                    activity__Finished: activity.finished,
+                    activity__FinishedOrPending: activity.finished
+                        ? 'finished'
+                        : activity.pending
+                          ? 'pending'
+                          : '',
                     activity__Rating: activity?.rating
                         ? activity?.rating * (userSettings?.ratingMax ?? 5)
                         : undefined,
@@ -86,7 +91,8 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                             ? vals.activity__Rating / (userSettings?.ratingMax ?? 5)
                             : undefined,
                         notes: vals.activity__Notes as string,
-                        finished: vals.activity__Finished,
+                        finished: vals.activity__FinishedOrPending === 'finished',
+                        pending: vals.activity__FinishedOrPending === 'pending',
                         start_time: dateRangeStart?.toISO() ?? undefined,
                         end_time: dateRangeEnd?.toISO() ?? undefined,
                     }
@@ -144,11 +150,14 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                 ) : null}
                 <Divider />
                 <Form.Item
-                    name="activity__Finished"
-                    label="Finished?"
-                    valuePropName="checked"
+                    name="activity__FinishedOrPending"
+                    label="Status"
                 >
-                    <Checkbox />
+                    <Radio.Group>
+                        <Radio value="pending">Pending</Radio>
+                        <Radio value="finished">Finished</Radio>
+                        <Radio value="">None</Radio>
+                    </Radio.Group>
                 </Form.Item>
                 <Form.Item
                     label="Date Range"
