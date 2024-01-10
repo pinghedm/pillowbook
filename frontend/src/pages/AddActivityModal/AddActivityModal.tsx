@@ -30,6 +30,7 @@ const AddActivityModal = ({ closeModal }: AddActivityModalProps) => {
                         <Card
                             onClick={closeModal}
                             hoverable
+                            style={{ width: '200px' }}
                             cover={
                                 <div
                                     style={{
