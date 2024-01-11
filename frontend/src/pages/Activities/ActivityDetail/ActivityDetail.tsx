@@ -62,7 +62,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                     alignItems: 'center',
                 }}
             >
-                sdsadasd Activity for
+                Activity for
                 <Link to={{ pathname: '/items/' + (item?.token ?? '') }}>{item?.name}</Link>
             </div>
             <Form
