@@ -63,7 +63,9 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                 }}
             >
                 Activity for
-                <Link to={{ pathname: '/items/' + (item?.token ?? '') }}>{item?.name}</Link>
+                <Link to={{ pathname: '/items/' + (item?.token ?? '') }}>
+                    {item?.name || '[No Name Schema]'}
+                </Link>
             </div>
             <Form
                 labelAlign="left"

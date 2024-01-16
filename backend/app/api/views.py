@@ -109,13 +109,14 @@ class ItemDetailsType(TypedDict):
 def get_or_create_validated_item(
     item_details: ItemDetailsType, item_type: ItemType, user: User
 ):
-    item_required_fields = item_type.item_schema["required"]
+    item_required_fields = item_type.item_schema.get("required", [])
     try:
         jsonschema.validate(item_details["info"], item_type.item_schema)
     except jsonschema.exceptions.ValidationError as e:
         return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
 
     item, created = Item.objects.get_or_create(
+        item_type=item_type,
         **{
             f"info__{k}": v
             for k, v in item_details["info"].items()
