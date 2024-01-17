@@ -59,10 +59,14 @@ export const useUpdateItemType = () => {
         onMutate: () => {
             queryClient.cancelQueries({ queryKey: ['itemTypes'] })
             queryClient.cancelQueries({ queryKey: ['autocomplete'] })
+            queryClient.cancelQueries({ queryKey: ['items'] })
+            queryClient.cancelQueries({ queryKey: ['activities'] })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['itemTypes'] })
             queryClient.invalidateQueries({ queryKey: ['autocomplete'] })
+            queryClient.invalidateQueries({ queryKey: ['items'] })
+            queryClient.invalidateQueries({ queryKey: ['activities'] })
         },
     })
     return mutation
