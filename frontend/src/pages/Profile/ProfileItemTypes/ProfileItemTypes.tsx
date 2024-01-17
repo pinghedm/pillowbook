@@ -151,6 +151,7 @@ const NewItemTypeModal = ({
                                 { name, parentSlug, icon: icon as RcFile },
                                 {
                                     onSuccess: itemType => {
+                                        setName(undefined)
                                         openEdit(itemType.slug)
                                     },
                                 },
@@ -568,7 +569,8 @@ const EditItemTypeModal = ({
                             !newField.title ||
                             Object.keys(itemType.item_schema.properties ?? {}).includes(
                                 slugify(newField.title, { lower: true }),
-                            )
+                            ) ||
+                            !slugify(newField.title, { lower: true })
                         }
                         onClick={() => {
                             const slug = slugify(newField.title, { lower: true })
