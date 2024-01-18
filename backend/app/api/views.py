@@ -142,6 +142,7 @@ class ActivityFilterSet(FilterSet):
     items = CharInFilter(field_name="item__token", lookup_expr="in")
     completed = CharInFilter(method="filter_by_completed")
     pending = CharInFilter(method="filter_by_pending")
+    hasEndTime = CharInFilter(method="filter_by_ended")
 
     def filter_by_completed(self, queryset, name, value):
         # tragically cascader cant use bool, so we're going to get back the strings 'false' and 'true'
@@ -160,6 +161,13 @@ class ActivityFilterSet(FilterSet):
             queryset = queryset.filter(pending=True)
         return queryset
 
+    def filter_by_ended(self, queryset, name, value):
+        if "false" in value:
+            queryset = queryset.filter(end_time__isnull=True)
+        if "true" in value:
+            queryset = queryset.filter(end_time__isnull=False)
+        return queryset
+    
     class Meta:
         model = Activity
         fields = []
@@ -246,7 +254,7 @@ class ItemList(generics.ListCreateAPIView):
     pagination_class = PaginationBase
     filter_backends = [DjangoFilterBackend, ItemSearchFilter, OrderingFilter]
     filterset_class = ItemFilterSet
-    ordering_fields = ["rating", "item_type__slug", "parent__token"]
+    ordering_fields = ["created", "modified", "rating", "item_type__slug", "parent__token"]
 
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user)

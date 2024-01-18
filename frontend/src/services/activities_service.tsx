@@ -83,6 +83,7 @@ export interface FilterInfoFilters {
     completed: string[] // tragically, cascader doesnt allow bool
     items: string[]
     pending: string[] // tragically, cascader doesnt allow bool
+    hasEndTime: string[]
 }
 
 export interface FilterInfo {
