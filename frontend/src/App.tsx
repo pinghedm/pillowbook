@@ -273,12 +273,8 @@ const routes = [
         children: [
             { path: '', element: <Activities /> },
             {
-                path: ':type',
+                path: ':type/:token?',
                 element: <AddActivity />,
-            },
-            {
-                path: ':type/:token',
-                element: <ActivityDetail />,
             },
         ],
     },

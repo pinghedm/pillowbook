@@ -23,12 +23,13 @@ import { DateTime } from 'luxon'
 import { PlusOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
 import { useForm } from 'antd/es/form/Form'
-import { ItemDetail } from 'services/item_service'
+import { ItemDetail, useItem } from 'services/item_service'
+import ActivityDetail from '../ActivityDetail/ActivityDetail.lazy'
 export interface AddActivityProps {}
 
 const AddActivity = ({}: AddActivityProps) => {
     const navigate = useNavigate()
-    const { type: itemTypeSlug } = useParams()
+    const { type: itemTypeSlug, token } = useParams()
     const { data: itemType } = useItemType(itemTypeSlug)
     const { data: parentItemType } = useItemType(itemType?.parent_slug ?? '')
     const { data: userSettings } = useUserSettings()
@@ -49,17 +50,26 @@ const AddActivity = ({}: AddActivityProps) => {
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
     const [popoverOpen, setPopoverOpen] = useState(false)
     const [form] = useForm()
+    const {data: item, status: itemStatus} = useItem(token)
+
     if (!itemType) {
         return <Spin />
+    }
+    
+    if(token?.startsWith('A')) {
+        return <ActivityDetail />
     }
 
     return (
         <div>
             Add {itemType.name}
-            <Form
+            {(token == undefined || item) ? <Form
                 initialValues={{
+                    ...item?.info,
+                    item__Parent: item?.parent_token,
                     activity__FinishedOrPending:
                         userSettings?.activityDefaults?.defaultStatus ?? '',
+                    
                 }}
                 form={form}
                 labelAlign="left"
@@ -94,7 +104,7 @@ const AddActivity = ({}: AddActivityProps) => {
                         },
                         {
                             onSuccess: activity => {
-                                navigate({ pathname: activity.token })
+                                navigate({ pathname: `/activities/${itemType.slug}/${activity.token}` })
                             },
                         },
                     )
@@ -243,7 +253,7 @@ const AddActivity = ({}: AddActivityProps) => {
                         Add
                     </Button>
                 </Form.Item>
-            </Form>
+            </Form>: null}
         </div>
     )
 }
