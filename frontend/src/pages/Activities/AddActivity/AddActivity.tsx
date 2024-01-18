@@ -67,7 +67,7 @@ const AddActivity = ({}: AddActivityProps) => {
             <Form
                 initialValues={{
                     ...item?.info??{},
-                    item__Parent: item?.parent_token??{},
+                    item__Parent: item?.parent_token
                     activity__FinishedOrPending:
                         userSettings?.activityDefaults?.defaultStatus ?? '',
                     
