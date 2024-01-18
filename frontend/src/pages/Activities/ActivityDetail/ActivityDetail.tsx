@@ -62,8 +62,10 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                     alignItems: 'center',
                 }}
             >
-                sdsadasd Activity for
-                <Link to={{ pathname: '/items/' + (item?.token ?? '') }}>{item?.name}</Link>
+                Activity for
+                <Link to={{ pathname: '/items/' + (item?.token ?? '') }}>
+                    {item?.name || '[No Name Schema]'}
+                </Link>
             </div>
             <Form
                 labelAlign="left"

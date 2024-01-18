@@ -1,4 +1,5 @@
 import { DeleteOutlined, PlusOutlined, QuestionOutlined, UploadOutlined } from '@ant-design/icons'
+import { useQueryClient } from '@tanstack/react-query'
 import {
     Alert,
     AutoComplete,
@@ -16,6 +17,7 @@ import {
 import { RcFile } from 'antd/es/upload'
 import axios from 'axios'
 import React, { useEffect, useMemo, useState } from 'react'
+import { useItems } from 'services/item_service'
 import {
     FORM_FIELD_TYPES,
     NON_FORM_FIELD_PROPERTIES,
@@ -151,6 +153,7 @@ const NewItemTypeModal = ({
                                 { name, parentSlug, icon: icon as RcFile },
                                 {
                                     onSuccess: itemType => {
+                                        setName(undefined)
                                         openEdit(itemType.slug)
                                     },
                                 },
@@ -207,6 +210,14 @@ const EditItemTypeModal = ({
         return baseURL + '/api/item_type/' + itemSlug + '/icon'
     }, [itemSlug])
 
+    const { data: exampleItems } = useItems(
+        1,
+        20,
+        undefined,
+        { itemTypes: [itemSlug ?? ''] },
+        undefined,
+    )
+
     if (!itemType) {
         return null
     }
@@ -258,6 +269,16 @@ const EditItemTypeModal = ({
                             patch: { name_schema: e.target.value },
                         })
                     }}
+                />
+            </div>
+            <div
+                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
+            >
+                Item Name Schema Example
+                <Input
+                    style={{ maxWidth: '500px' }}
+                    readOnly
+                    value={(exampleItems?.results?.[0] ?? { name: '[No Items Found]' }).name}
                 />
             </div>
             <div
@@ -568,7 +589,8 @@ const EditItemTypeModal = ({
                             !newField.title ||
                             Object.keys(itemType.item_schema.properties ?? {}).includes(
                                 slugify(newField.title, { lower: true }),
-                            )
+                            ) ||
+                            !slugify(newField.title, { lower: true })
                         }
                         onClick={() => {
                             const slug = slugify(newField.title, { lower: true })

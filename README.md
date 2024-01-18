@@ -14,4 +14,6 @@
 Use `task backend` and `task frontend` to run the respective sides of the app.  
 
 ## Other Info
-`task shell` and `task shell_plus` are available if you need a shell into the backend container (eg to make migrations) or into a django shell
+- `task shell` and `task shell_plus` are available if you need a shell into the backend container (eg to make migrations) or into a django shell
+- to add new FE components, use `npx generate-react-cli component [component name] --path src/[pages or components]/[path to place you want it, no trailing slash]`
+  - Command needs to be run from within the src/ dir in FE

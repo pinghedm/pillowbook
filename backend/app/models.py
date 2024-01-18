@@ -1,5 +1,7 @@
+from collections import defaultdict
 import datetime
 import re
+from functools import reduce
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from django.db import models
@@ -102,7 +104,8 @@ def _gen_item_token():
 
 
 class Item(TimeStampedModel):
-    name_template_regex = re.compile(r"{{(\w+)}}")
+    name_template_regex = re.compile(r"{{([\w\.!%]+)}}")
+    parent_stripper_regex = re.compile(r"(parent\.)*(.*)")
 
     token: "TextField[str, str]" = TextField(default=_gen_item_token, unique=True)
     info = JSONField(default=dict, blank=True)
@@ -122,12 +125,44 @@ class Item(TimeStampedModel):
             return ""
         return self.parent.name
 
+    def _parse_time_name_field(self, spec, val):
+        if "!" in spec:
+            format_string = spec.split("!")[1]
+            return val.strftime(format_string)
+        return val.isoformat()
+
     @property
     def name(self):
         name_fields = re.findall(self.name_template_regex, self.item_type.name_schema)
         name = self.item_type.name_schema
+        time_fields = ["created"]
+
         for field in name_fields:
-            name = name.replace("{{" + field + "}}", str(self.info.get(field, "")))
+            (parent_accessor, actual_field) = re.search(
+                self.parent_stripper_regex, field
+            ).groups()
+            val = ""
+            if not parent_accessor:
+                if actual_field.split("!")[0] in time_fields:
+                    val = self._parse_time_name_field(actual_field, self.created)
+                else:
+                    val = self.info.get(actual_field, "")
+            else:
+                ancestor = reduce(
+                    lambda memo, next_: getattr(memo, next_, None),
+                    parent_accessor.strip(".").split("."),
+                    self,
+                )
+                if ancestor:
+                    if actual_field.split("!")[0] in time_fields:
+                        val = self._parse_time_name_field(
+                            actual_field, ancestor.created
+                        )
+                    else:
+                        val = ancestor.info.get(actual_field, "")
+
+            name = name.replace("{{" + field + "}}", str(val))
+
         return name
 
     def __str__(self) -> str:

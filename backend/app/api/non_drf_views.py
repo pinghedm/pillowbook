@@ -9,7 +9,7 @@ from app.models import Item, ItemType
 def get_item_autocomplete_values(request: HttpRequest, item_slug: str) -> JsonResponse:
     item_type = get_object_or_404(ItemType, user=request.user, slug=item_slug)
     auto_complete_choices = {}
-    for field_name in item_type.item_schema["properties"].keys():
+    for field_name in item_type.item_schema.get("properties", {}).keys():
         vals = (
             Item.objects.filter(user=request.user, item_type__slug=item_slug)
             .values_list(f"info__{field_name}", flat=True)
