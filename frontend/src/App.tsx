@@ -37,6 +37,7 @@ import { useItemTypes } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
 import AddActivityModal from 'pages/AddActivityModal/AddActivityModal.lazy'
 import ProfileActivityDefaults from 'pages/Profile/ProfileActivityDefaults/ProfileActivityDefaults.lazy'
+import ActivityWrapper from 'pages/Activities/ActivityWrapper/ActivityWrapper'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -273,7 +274,11 @@ const routes = [
         children: [
             { path: '', element: <Activities /> },
             {
-                path: ':type/:token?',
+                path: ':type/:token',
+                element: <ActivityWrapper />,
+            },
+            {
+                path: ':type/',
                 element: <AddActivity />,
             },
         ],

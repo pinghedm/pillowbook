@@ -3,7 +3,7 @@ import { useItems } from 'services/item_service'
 import React from 'react'
 import { Link, Outlet } from 'react-router-dom'
 
-import { useActivities, useUpdateActivity } from 'services/activities_service'
+import { Activity, useActivities, useUpdateActivity } from 'services/activities_service'
 import { usePagedResultData } from 'services/utils'
 
 export interface HomeProps {}
@@ -21,7 +21,7 @@ const Home = ({}: HomeProps) => {
 
     const activityUpdateMutation = useUpdateActivity()
 
-    const markFinished = (item:any) => {
+    const markFinished = (item:Activity) => {
         activityUpdateMutation.mutate({
             token: item.token,
             patch: { pending: false, finished: true}
@@ -30,14 +30,14 @@ const Home = ({}: HomeProps) => {
 
     return (
         <div style={{}}>
-            <Typography.Title level={2}>Recently Added</Typography.Title>
+            <Typography.Title level={2}>Recently Added Items</Typography.Title>
                 <List loading={recentsPending && recentsStatus !== 'idle'} size='small' dataSource={recents} renderItem={(item, index) => (
                     <List.Item>
                         <List.Item.Meta title={item.name}/>
-                        <Button type='primary' href={`/activities/${item.item_type}/${item.token}`}>Quick Add</Button>
+                        <Button type='primary' href={`/activities/${item.item_type}/${item.token}`}>Log Activity</Button>
                     </List.Item>
                 )} />
-            <Typography.Title level={2}>Upcoming Items</Typography.Title>
+            <Typography.Title level={2}>Upcoming Activities</Typography.Title>
                 <List 
                     loading={upcomingPending && upcomingStatus !== 'idle'} 
                     size='small' 
@@ -56,7 +56,7 @@ const Home = ({}: HomeProps) => {
                     )} 
                 />
             
-            <Typography.Title level={2}>Unfinished Items</Typography.Title>
+            <Typography.Title level={2}>Unfinished Activities</Typography.Title>
             <List 
                 loading={unfinishedPending && unfinishedStatus !== 'idle'} 
                 size='small' 

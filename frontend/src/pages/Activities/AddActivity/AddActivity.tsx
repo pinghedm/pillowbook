@@ -55,18 +55,19 @@ const AddActivity = ({}: AddActivityProps) => {
     if (!itemType) {
         return <Spin />
     }
-    
-    if(token?.startsWith('A')) {
-        return <ActivityDetail />
-    }
+
+    if (token && !item){
+        return <Spin/>
+     }
+
 
     return (
         <div>
             Add {itemType.name}
-            {(token == undefined || item) ? <Form
+            <Form
                 initialValues={{
-                    ...item?.info,
-                    item__Parent: item?.parent_token,
+                    ...item?.info??{},
+                    item__Parent: item?.parent_token??{},
                     activity__FinishedOrPending:
                         userSettings?.activityDefaults?.defaultStatus ?? '',
                     
@@ -253,7 +254,7 @@ const AddActivity = ({}: AddActivityProps) => {
                         Add
                     </Button>
                 </Form.Item>
-            </Form>: null}
+            </Form>
         </div>
     )
 }
