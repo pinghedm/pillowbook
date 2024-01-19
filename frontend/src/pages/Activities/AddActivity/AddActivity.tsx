@@ -20,6 +20,7 @@ import { DateTime } from 'luxon'
 import { PlusOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
 import { useItem } from 'services/item_service'
+import { CheckboxWrapper, FormWrap, LabeledFormRow } from 'components/FormWrappers'
 export interface AddActivityProps {}
 
 const AddActivity = ({}: AddActivityProps) => {
@@ -146,25 +147,12 @@ const AddActivity = ({}: AddActivityProps) => {
             <Typography.Title level={3}>Add {itemType.name}</Typography.Title>
             <Typography.Title level={4}>Item Information</Typography.Title>
 
-            <div
-                style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '24px' }}
-            >
+            <FormWrap>
                 {Object.entries(itemType.item_schema.properties ?? {}).map(
                     ([fieldName, fieldData]) =>
                         typeof fieldData === 'boolean' ? null : (
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    gap: '8px',
-                                    width: '100%',
-                                    maxWidth: '500px',
-                                }}
-                                key={fieldName}
-                            >
-                                <Typography.Text style={{ width: '150px' }}>
-                                    {fieldData?.title ?? fieldName}
-                                </Typography.Text>
+                            <LabeledFormRow key={fieldName}>
+                                <Typography.Text>{fieldData?.title ?? fieldName}</Typography.Text>
                                 {fieldData.type === 'string' ? (
                                     <AutoComplete
                                         value={newActivity.itemDetails.info?.[fieldName] || ''}
@@ -205,6 +193,7 @@ const AddActivity = ({}: AddActivityProps) => {
                                     />
                                 ) : fieldData.type === 'number' ? (
                                     <InputNumber
+                                        precision={2}
                                         value={newActivity.itemDetails.info?.[fieldName] || ''}
                                         onChange={val => {
                                             setNewActivity(a => ({
@@ -222,20 +211,12 @@ const AddActivity = ({}: AddActivityProps) => {
                                 ) : (
                                     <div>UnsupportedType</div>
                                 )}
-                            </div>
+                            </LabeledFormRow>
                         ),
                 )}
                 {parentItemType ? (
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            gap: '8px',
-                            width: '100%',
-                            maxWidth: '500px',
-                        }}
-                    >
-                        <Typography.Text style={{ width: '150px' }}>Item Parent</Typography.Text>
+                    <LabeledFormRow>
+                        <Typography.Text>Item Parent</Typography.Text>
                         <div
                             style={{
                                 display: 'flex',
@@ -287,17 +268,11 @@ const AddActivity = ({}: AddActivityProps) => {
                                 <Button icon={<PlusOutlined />} />
                             </Popover>
                         </div>
-                    </div>
+                    </LabeledFormRow>
                 ) : null}
                 <Divider />
                 <Typography.Title level={4}>Activity Information</Typography.Title>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                    }}
-                >
+                <CheckboxWrapper>
                     <div>
                         <Checkbox
                             checked={newActivity.activityDetails.pending}
@@ -328,16 +303,9 @@ const AddActivity = ({}: AddActivityProps) => {
                         />{' '}
                         <Typography.Text>Finishes Item</Typography.Text>
                     </div>
-                </div>
+                </CheckboxWrapper>
 
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '16px',
-                        alignItems: 'flex-start',
-                    }}
-                >
+                <LabeledFormRow>
                     <Typography.Text>Date Range</Typography.Text>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <DatePicker.RangePicker
@@ -399,20 +367,12 @@ const AddActivity = ({}: AddActivityProps) => {
                             </Button>
                         </div>
                     </div>
-                </div>
+                </LabeledFormRow>
 
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '8px',
-                        width: '100%',
-                        maxWidth: '500px',
-                        marginTop: '16px',
-                    }}
-                >
-                    <Typography.Text style={{ width: '150px' }}>Rating</Typography.Text>
+                <LabeledFormRow>
+                    <Typography.Text>Rating</Typography.Text>
                     <InputNumber
+                        precision={2}
                         max={userSettings?.ratingMax ?? 5}
                         value={newActivity.activityDetails.rating || ''}
                         onChange={val => {
@@ -422,8 +382,8 @@ const AddActivity = ({}: AddActivityProps) => {
                             }))
                         }}
                     />
-                </div>
-                <div
+                </LabeledFormRow>
+                <LabeledFormRow
                     style={{
                         display: 'flex',
                         flexDirection: 'row',
@@ -431,7 +391,7 @@ const AddActivity = ({}: AddActivityProps) => {
                         width: '100%',
                     }}
                 >
-                    <Typography.Text style={{ width: '150px' }}>Notes</Typography.Text>
+                    <Typography.Text>Notes</Typography.Text>
                     <Input.TextArea
                         style={{ maxWidth: '400px' }}
                         value={newActivity.activityDetails.notes || ''}
@@ -442,7 +402,7 @@ const AddActivity = ({}: AddActivityProps) => {
                             }))
                         }}
                     />
-                </div>
+                </LabeledFormRow>
                 <div
                     style={{
                         display: 'flex',
@@ -478,7 +438,7 @@ const AddActivity = ({}: AddActivityProps) => {
                         Save and Add Another
                     </Button>
                 </div>
-            </div>
+            </FormWrap>
         </div>
     )
 }

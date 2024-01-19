@@ -1,26 +1,24 @@
-import { StarFilled } from '@ant-design/icons'
-import { RJSFSchema } from '@rjsf/utils'
 import {
+    Alert,
     AutoComplete,
     Button,
     Checkbox,
     Divider,
-    Form,
     Input,
     InputNumber,
-    Radio,
     Select,
     Spin,
+    Typography,
 } from 'antd'
 import DatePicker from 'components/DatePicker'
+import { CheckboxWrapper, FormWrap, LabeledFormRow } from 'components/FormWrappers'
 import { DateTime } from 'luxon'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useActivity, useUpdateActivity } from 'services/activities_service'
 import { useItem } from 'services/item_service'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
-import { capitalizeWords } from 'services/utils'
 
 export interface ActivityDetailProps {}
 
@@ -33,149 +31,142 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
     const { data: userSettings } = useUserSettings()
     const updateActivityMutation = useUpdateActivity()
 
-    // form values are not updating correctly for these guys, so for now just control them ourselves
-    const [dateRangeStart, setDateRangeStart] = useState<DateTime | null>(
-        activity?.start_time ? DateTime.fromISO(activity.start_time) : null,
-    )
-    const [dateRangeEnd, setDateRangeEnd] = useState<DateTime | null>(
-        activity?.end_time ? DateTime.fromISO(activity.end_time) : null,
-    )
-    useEffect(() => {
-        if (activity?.start_time && !dateRangeStart) {
-            setDateRangeStart(DateTime.fromISO(activity.start_time))
-        }
-        if (activity?.end_time && !dateRangeEnd) {
-            setDateRangeEnd(DateTime.fromISO(activity.end_time))
-        }
-    }, [activity, dateRangeEnd, dateRangeStart])
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType?.slug ?? '')
+
+    const [saving, setSaving] = useState(false)
     if (!itemType || !activity || !item) {
         return <Spin />
     }
     return (
         <div>
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '5px',
-                    alignItems: 'center',
-                }}
-            >
-                Activity for
+            <Typography.Title level={3}>
+                Activity for{' '}
                 <Link to={{ pathname: '/items/' + (item?.token ?? '') }}>
                     {item?.name || '[No Name Schema]'}
                 </Link>
-            </div>
-            <Form
-                labelAlign="left"
-                labelWrap
-                labelCol={{ span: 1 }}
-                initialValues={{
-                    ...item?.info,
-                    activity__Finished: activity.finished,
-                    activity__Pending: activity.pending,
+            </Typography.Title>
+            {saving ? (
+                <Alert
+                    type="success"
+                    message="Saving"
+                />
+            ) : null}
+            <Typography.Title level={4}>Item Information</Typography.Title>
 
-                    activity__Rating: activity?.rating
-                        ? activity?.rating * (userSettings?.ratingMax ?? 5)
-                        : undefined,
-                    activity__Notes: activity.notes,
-                    item__Parent: item?.parent_token,
-                }}
-                onFinish={vals => {
-                    if (!activity) {
-                        return
-                    }
-                    const activityInfo = {
-                        rating: vals.activity__Rating
-                            ? vals.activity__Rating / (userSettings?.ratingMax ?? 5)
-                            : undefined,
-                        notes: vals.activity__Notes as string,
-                        finished: vals.activity__FinishedOrPending === 'finished',
-                        pending: vals.activity__FinishedOrPending === 'pending',
-                        start_time: dateRangeStart?.toISO() ?? undefined,
-                        end_time: dateRangeEnd?.toISO() ?? undefined,
-                    }
-                    updateActivityMutation.mutate({
-                        token: activity.token,
-                        patch: activityInfo,
-                    })
-                }}
-            >
+            <FormWrap>
                 {Object.entries(itemType.item_schema.properties ?? {}).map(
                     ([fieldName, fieldData]) =>
                         typeof fieldData === 'boolean' ? null : (
-                            <Form.Item
-                                key={fieldName}
-                                label={fieldData?.title ?? fieldName}
-                                name={fieldName}
-                                rules={[
-                                    {
-                                        required:
-                                            itemType.item_schema?.required?.includes(fieldName),
-                                        message: `${fieldData?.title ?? fieldName} is required`,
-                                    },
-                                ]}
-                            >
+                            <LabeledFormRow>
+                                <Typography.Text>{fieldData?.title ?? fieldName}</Typography.Text>
                                 {fieldData.type === 'string' ? (
                                     <AutoComplete
                                         disabled
-                                        allowClear
-                                        filterOption
-                                        style={{ maxWidth: '300px' }}
-                                        options={autocompleteChoices?.[fieldName]}
+                                        style={{ maxWidth: '300px', flex: 1 }}
+                                        value={item?.info?.[fieldName]}
                                     />
                                 ) : fieldData.type === 'number' ? (
-                                    <InputNumber disabled />
+                                    <InputNumber
+                                        disabled
+                                        value={item?.info?.[fieldName]}
+                                    />
                                 ) : (
                                     <div>UnsupportedType</div>
                                 )}
-                            </Form.Item>
+                            </LabeledFormRow>
                         ),
                 )}
                 {parentItemType ? (
-                    <Form.Item
-                        label={parentItemType.name}
-                        name="item__Parent"
-                    >
+                    <LabeledFormRow>
+                        <Typography.Text>Parent</Typography.Text>
                         <Select
                             disabled
-                            allowClear
                             style={{ width: '300px' }}
-                            filterOption
+                            value={item?.parent_token}
                             options={autocompleteChoices?.[parentItemType.slug]}
-                            showSearch
                         />
-                    </Form.Item>
+                    </LabeledFormRow>
                 ) : null}
                 <Divider />
-                <Form.Item
-                    name="activity__Pending"
-                    label="Pending"
-                    valuePropName="checked"
-                >
-                    <Checkbox />
-                </Form.Item>
-                <Form.Item
-                    valuePropName="checked"
-                    name="activity__Finished"
-                    label="Finishes Item"
-                >
-                    <Checkbox />
-                </Form.Item>
-                <Form.Item
-                    label="Date Range"
-                    getValueProps={i => ({ value: DateTime.fromJSDate(i) })}
-                >
+                <Typography.Title level={4}>Activity Information</Typography.Title>
+
+                <CheckboxWrapper>
+                    <div>
+                        <Checkbox
+                            checked={activity.pending}
+                            onChange={e => {
+                                setSaving(true)
+                                updateActivityMutation.mutate(
+                                    {
+                                        token: activity.token,
+                                        patch: { pending: e.target.checked },
+                                    },
+                                    {
+                                        onSettled: () => {
+                                            setTimeout(() => {
+                                                setSaving(false)
+                                            }, 300)
+                                        },
+                                    },
+                                )
+                            }}
+                        />{' '}
+                        <Typography.Text>Pending</Typography.Text>
+                    </div>
+                    <div>
+                        <Checkbox
+                            checked={activity.finished}
+                            onChange={e => {
+                                setSaving(true)
+                                updateActivityMutation.mutate(
+                                    {
+                                        token: activity.token,
+                                        patch: { finished: e.target.checked },
+                                    },
+                                    {
+                                        onSettled: () => {
+                                            setTimeout(() => {
+                                                setSaving(false)
+                                            }, 300)
+                                        },
+                                    },
+                                )
+                            }}
+                        />{' '}
+                        <Typography.Text>Finishes Item</Typography.Text>
+                    </div>
+                </CheckboxWrapper>
+                <LabeledFormRow>
+                    <Typography.Text>Date Range</Typography.Text>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <div>
                             <DatePicker.RangePicker
                                 showTime
                                 allowEmpty={[true, true]}
-                                value={[dateRangeStart, dateRangeEnd]}
+                                defaultValue={[
+                                    activity.start_time
+                                        ? DateTime.fromISO(activity.start_time)
+                                        : null,
+                                    activity.end_time ? DateTime.fromISO(activity.end_time) : null,
+                                ]}
                                 onChange={dates => {
-                                    setDateRangeStart(dates?.[0] ?? null)
-                                    setDateRangeEnd(dates?.[1] ?? null)
+                                    setSaving(true)
+                                    updateActivityMutation.mutate(
+                                        {
+                                            token: activity.token,
+                                            patch: {
+                                                start_time: dates?.[0]?.toISO() || undefined,
+                                                end_time: dates?.[1]?.toISO() || undefined,
+                                            },
+                                        },
+                                        {
+                                            onSettled: () => {
+                                                setTimeout(() => {
+                                                    setSaving(false)
+                                                }, 300)
+                                            },
+                                        },
+                                    )
                                 }}
                             />
                         </div>
@@ -183,7 +174,22 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                             <Button
                                 type="text"
                                 onClick={() => {
-                                    setDateRangeStart(DateTime.now())
+                                    setSaving(true)
+                                    updateActivityMutation.mutate(
+                                        {
+                                            token: activity.token,
+                                            patch: {
+                                                start_time: DateTime.now().toISO(),
+                                            },
+                                        },
+                                        {
+                                            onSettled: () => {
+                                                setTimeout(() => {
+                                                    setSaving(false)
+                                                }, 300)
+                                            },
+                                        },
+                                    )
                                 }}
                             >
                                 Set Start To Now
@@ -191,37 +197,84 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                             <Button
                                 type="text"
                                 onClick={() => {
-                                    setDateRangeEnd(DateTime.now())
+                                    setSaving(true)
+                                    updateActivityMutation.mutate(
+                                        {
+                                            token: activity.token,
+                                            patch: {
+                                                end_time: DateTime.now().toISO(),
+                                            },
+                                        },
+                                        {
+                                            onSettled: () => {
+                                                setTimeout(() => {
+                                                    setSaving(false)
+                                                }, 300)
+                                            },
+                                        },
+                                    )
                                 }}
                             >
                                 Set End To Now
                             </Button>
                         </div>
                     </div>
-                </Form.Item>
-
-                <Form.Item
-                    name="activity__Rating"
-                    label="Rating"
+                </LabeledFormRow>
+                <LabeledFormRow>
+                    <Typography.Text>Rating</Typography.Text>
+                    <InputNumber
+                        precision={2}
+                        max={userSettings?.ratingMax ?? 5}
+                        defaultValue={(activity.rating || 0) * (userSettings?.ratingMax ?? 5)}
+                        onBlur={val => {
+                            setSaving(true)
+                            updateActivityMutation.mutate(
+                                {
+                                    token: activity.token,
+                                    patch: { rating: Number(val) / (userSettings?.ratingMax ?? 5) },
+                                },
+                                {
+                                    onSettled: () => {
+                                        setTimeout(() => {
+                                            setSaving(false)
+                                        }, 300)
+                                    },
+                                },
+                            )
+                        }}
+                    />
+                </LabeledFormRow>
+                <LabeledFormRow
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '8px',
+                        width: '100%',
+                    }}
                 >
-                    <InputNumber max={userSettings?.ratingMax ?? 5} />
-                </Form.Item>
-                <Form.Item
-                    name="activity__Notes"
-                    label="Notes"
-                >
-                    <Input.TextArea style={{ maxWidth: '400px' }} />
-                </Form.Item>
-                <Form.Item>
-                    <Button
-                        type="primary"
-                        htmlType="submit"
-                        loading={updateActivityMutation.isPending}
-                    >
-                        Update
-                    </Button>
-                </Form.Item>
-            </Form>
+                    <Typography.Text>Notes</Typography.Text>
+                    <Input.TextArea
+                        style={{ maxWidth: '400px' }}
+                        defaultValue={activity.notes}
+                        onBlur={e => {
+                            setSaving(true)
+                            updateActivityMutation.mutate(
+                                {
+                                    token: activity.token,
+                                    patch: { notes: e.target.value },
+                                },
+                                {
+                                    onSettled: () => {
+                                        setTimeout(() => {
+                                            setSaving(false)
+                                        }, 300)
+                                    },
+                                },
+                            )
+                        }}
+                    />
+                </LabeledFormRow>
+            </FormWrap>
         </div>
     )
 }
