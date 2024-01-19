@@ -104,7 +104,7 @@ def _gen_item_token():
 
 
 class Item(TimeStampedModel):
-    name_template_regex = re.compile(r"{{([\w\.!%]+)}}")
+    name_template_regex = re.compile(r"{{([\w\-\.!%]+)}}")
     parent_stripper_regex = re.compile(r"(parent\.)*(.*)")
 
     token: "TextField[str, str]" = TextField(default=_gen_item_token, unique=True)
