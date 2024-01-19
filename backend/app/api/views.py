@@ -313,12 +313,15 @@ class ItemDetails(generics.RetrieveUpdateDestroyAPIView):
 
         orig_obj = self.get_object()
 
-        item_required_fields = orig_obj.item_type.item_schema["required"]
+        if "info" in item_details:
+            item_required_fields = orig_obj.item_type.item_schema["required"]
 
-        try:
-            jsonschema.validate(item_details["info"], orig_obj.item_type.item_schema)
-        except jsonschema.exceptions.ValidationError as e:
-            return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                jsonschema.validate(
+                    item_details["info"], orig_obj.item_type.item_schema
+                )
+            except jsonschema.exceptions.ValidationError as e:
+                return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
 
         res = super().partial_update(request, *args, **kwargs)
         if parent_token is not None:

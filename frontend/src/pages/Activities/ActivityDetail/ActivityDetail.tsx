@@ -57,7 +57,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                 {Object.entries(itemType.item_schema.properties ?? {}).map(
                     ([fieldName, fieldData]) =>
                         typeof fieldData === 'boolean' ? null : (
-                            <LabeledFormRow>
+                            <LabeledFormRow key={fieldName}>
                                 <Typography.Text>{fieldData?.title ?? fieldName}</Typography.Text>
                                 {fieldData.type === 'string' ? (
                                     <AutoComplete
@@ -226,7 +226,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                         precision={2}
                         max={userSettings?.ratingMax ?? 5}
                         defaultValue={(activity.rating || 0) * (userSettings?.ratingMax ?? 5)}
-                        onBlur={val => {
+                        onChange={val => {
                             setSaving(true)
                             updateActivityMutation.mutate(
                                 {

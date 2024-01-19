@@ -1,10 +1,22 @@
-import { AutoComplete, Popover, Form, Input, InputNumber, Spin, Button, Select, Space } from 'antd'
+import {
+    AutoComplete,
+    Popover,
+    Input,
+    InputNumber,
+    Spin,
+    Button,
+    Select,
+    Typography,
+    Alert,
+} from 'antd'
 import { useParams } from 'react-router-dom'
 import { useItem, useUpdateItem } from 'services/item_service'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
 import { PlusOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
+import { FormWrap, LabeledFormRow } from 'components/FormWrappers'
+import { useState } from 'react'
 
 export interface ItemDetailsProps {}
 
@@ -16,80 +28,115 @@ const ItemDetails = ({}: ItemDetailsProps) => {
     const updateItemMutation = useUpdateItem()
     const { data: userSettings } = useUserSettings()
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType?.slug ?? '')
+    const [saving, setSaving] = useState(false)
 
     if (!item || !itemType) {
         return <Spin />
     }
 
     return (
-        <Form
-            labelAlign="left"
-            labelWrap
-            labelCol={{ span: 1 }}
-            initialValues={{
-                ...item?.info,
-                item__Notes: item.notes,
-                item__Rating: item?.rating
-                    ? item?.rating * (userSettings?.ratingMax ?? 5)
-                    : undefined,
-                item__Parent: item?.parent_token,
-            }}
-            onFinish={vals => {
-                if (!item) {
-                    return
-                }
-                const formData = { ...vals }
-                const parentToken =
-                    parentItemType && vals['item__Parent'] ? vals.item__Parent : false
-                const itemDetails = {
-                    rating: vals.item__Rating
-                        ? vals.item__Rating / (userSettings?.ratingMax ?? 5)
-                        : undefined,
-                    notes: vals.item__Notes,
-                    parent_token: parentToken,
-                }
-                delete formData['item__Notes']
-                delete formData['item__Rating']
-                delete formData['item__Parent']
-                const itemInfo = {
-                    ...formData,
-                }
-                updateItemMutation.mutate({
-                    token: item.token,
-                    patch: { info: itemInfo, ...itemDetails },
-                })
-            }}
-        >
+        <FormWrap>
+            <Typography.Title level={2}>{item.name}</Typography.Title>
+            {saving ? (
+                <Alert
+                    type="success"
+                    message="saving"
+                />
+            ) : null}
             {Object.entries(itemType.item_schema.properties ?? {}).map(([fieldName, fieldData]) =>
                 typeof fieldData === 'boolean' ? null : (
-                    <Form.Item
-                        key={fieldName}
-                        label={fieldData?.title ?? fieldName}
-                        name={fieldName}
-                        rules={[
-                            {
-                                required: itemType.item_schema?.required?.includes(fieldName),
-                                message: `${fieldData?.title ?? fieldName} is required`,
-                            },
-                        ]}
-                    >
+                    <LabeledFormRow key={fieldName}>
+                        <Typography.Text>
+                            {fieldData?.title ?? fieldName}{' '}
+                            {itemType?.item_schema?.required?.includes(fieldName) ? (
+                                <span style={{ color: 'red' }}>*</span>
+                            ) : null}
+                        </Typography.Text>
                         {fieldData.type === 'string' ? (
                             <AutoComplete
-                                allowClear
+                                allowClear={!itemType?.item_schema?.required?.includes(fieldName)}
                                 filterOption
-                                style={{ maxWidth: '300px' }}
+                                style={{ maxWidth: '300px', flex: 1 }}
                                 options={autocompleteChoices?.[fieldName]}
+                                onSelect={val => {
+                                    setSaving(true)
+                                    updateItemMutation.mutate(
+                                        {
+                                            token: item.token,
+                                            patch: { info: { ...item.info, [fieldName]: val } },
+                                        },
+                                        {
+                                            onSettled: () => {
+                                                setTimeout(() => {
+                                                    setSaving(false)
+                                                }, 300)
+                                            },
+                                        },
+                                    )
+                                }}
+                                defaultValue={item.info?.[fieldName]}
+                                onBlur={e => {
+                                    if (
+                                        itemType?.item_schema?.required?.includes(fieldName) &&
+                                        //@ts-ignore
+                                        !e.target.value
+                                    ) {
+                                        return
+                                    }
+                                    setSaving(true)
+                                    updateItemMutation.mutate(
+                                        {
+                                            token: item.token,
+                                            patch: {
+                                                //@ts-ignore
+                                                info: { ...item.info, [fieldName]: e.target.value },
+                                            },
+                                        },
+                                        {
+                                            onSettled: () => {
+                                                setTimeout(() => {
+                                                    setSaving(false)
+                                                }, 300)
+                                            },
+                                        },
+                                    )
+                                }}
                             />
                         ) : fieldData.type === 'number' ? (
-                            <InputNumber />
+                            <InputNumber
+                                defaultValue={item.info?.[fieldName]}
+                                onChange={val => {
+                                    if (
+                                        itemType?.item_schema?.required?.includes(fieldName) &&
+                                        !(val || val === 0)
+                                    ) {
+                                        return
+                                    }
+                                    setSaving(true)
+                                    updateItemMutation.mutate(
+                                        {
+                                            token: item.token,
+                                            patch: { info: { ...item.info, [fieldName]: val } },
+                                        },
+                                        {
+                                            onSettled: () => {
+                                                setTimeout(() => {
+                                                    setSaving(false)
+                                                }, 300)
+                                            },
+                                        },
+                                    )
+                                }}
+                            />
                         ) : (
                             <div>UnsupportedType</div>
                         )}
-                    </Form.Item>
+                    </LabeledFormRow>
                 ),
             )}
             {parentItemType ? (
-                <Form.Item label={parentItemType.name}>
+                <LabeledFormRow>
+                    <Typography.Text>Parent</Typography.Text>
                     <div
                         style={{
                             display: 'flex',
@@ -98,15 +145,30 @@ const ItemDetails = ({}: ItemDetailsProps) => {
                             alignItems: 'center',
                         }}
                     >
-                        <Form.Item name="item__Parent">
-                            <Select
-                                allowClear
-                                style={{ width: '300px' }}
-                                filterOption
-                                options={autocompleteChoices?.[parentItemType.slug]}
-                                showSearch
-                            />
-                        </Form.Item>
+                        <Select
+                            allowClear
+                            value={item?.parent_token}
+                            onChange={val => {
+                                setSaving(true)
+                                updateItemMutation.mutate(
+                                    {
+                                        token: item.token,
+                                        patch: { parent_token: val },
+                                    },
+                                    {
+                                        onSettled: () => {
+                                            setTimeout(() => {
+                                                setSaving(false)
+                                            }, 300)
+                                        },
+                                    },
+                                )
+                            }}
+                            style={{ width: '300px' }}
+                            filterOption
+                            options={autocompleteChoices?.[parentItemType.slug]}
+                            showSearch
+                        />
                         <Popover
                             trigger={['click']}
                             content={
@@ -121,30 +183,63 @@ const ItemDetails = ({}: ItemDetailsProps) => {
                             <Button icon={<PlusOutlined />} />
                         </Popover>
                     </div>
-                </Form.Item>
+                </LabeledFormRow>
             ) : null}
-            <Form.Item
-                name="item__Rating"
-                label="Rating"
+            <LabeledFormRow>
+                <Typography.Text>Rating</Typography.Text>
+                <InputNumber
+                    precision={2}
+                    max={userSettings?.ratingMax ?? 5}
+                    defaultValue={(item.rating || 0) * (userSettings?.ratingMax ?? 5)}
+                    onChange={val => {
+                        setSaving(true)
+                        updateItemMutation.mutate(
+                            {
+                                token: item.token,
+                                patch: { rating: Number(val) / (userSettings?.ratingMax ?? 5) },
+                            },
+                            {
+                                onSettled: () => {
+                                    setTimeout(() => {
+                                        setSaving(false)
+                                    }, 300)
+                                },
+                            },
+                        )
+                    }}
+                />
+            </LabeledFormRow>
+            <LabeledFormRow
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '8px',
+                    width: '100%',
+                }}
             >
-                <InputNumber max={userSettings?.ratingMax ?? 5} />
-            </Form.Item>
-            <Form.Item
-                name="item__Notes"
-                label="Notes"
-            >
-                <Input.TextArea style={{ maxWidth: '400px' }} />
-            </Form.Item>
-            <Form.Item>
-                <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={updateItemMutation.isPending}
-                >
-                    Update
-                </Button>
-            </Form.Item>
-        </Form>
+                <Typography.Text>Notes</Typography.Text>
+                <Input.TextArea
+                    style={{ maxWidth: '400px' }}
+                    defaultValue={item.notes}
+                    onBlur={e => {
+                        setSaving(true)
+                        updateItemMutation.mutate(
+                            {
+                                token: item.token,
+                                patch: { notes: e.target.value },
+                            },
+                            {
+                                onSettled: () => {
+                                    setTimeout(() => {
+                                        setSaving(false)
+                                    }, 300)
+                                },
+                            },
+                        )
+                    }}
+                />
+            </LabeledFormRow>
+        </FormWrap>
     )
 }
 
