@@ -238,6 +238,14 @@ class ActivityList(generics.ListCreateAPIView):
 
 class ItemFilterSet(FilterSet):
     itemTypes = CharInFilter(field_name="item_type__slug", lookup_expr="in")
+    pinned = CharInFilter(method="filter_by_pinned")
+
+    def filter_by_pinned(self, queryset, name, value):
+        if "false" in value:
+            queryset = queryset.filter(pinned=False)
+        if "true" in value:
+            queryset = queryset.filter(pinned=True)
+        return queryset
 
     class Meta:
         model = Item

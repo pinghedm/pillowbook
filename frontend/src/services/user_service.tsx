@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
+import { HomeScreenModules } from 'pages/Home/Home'
 
 export interface UserSettings {
     ratingMax?: number
@@ -9,6 +10,9 @@ export interface UserSettings {
         defaultFinished?: boolean
         defaultStartToNow?: boolean
         defaultEndToNow?: boolean
+    }
+    homePageSettings?: {
+        activeModules?: (typeof HomeScreenModules)[number]['value'][]
     }
 }
 

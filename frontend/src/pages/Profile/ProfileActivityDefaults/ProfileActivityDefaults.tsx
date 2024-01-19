@@ -1,5 +1,5 @@
-import { Alert, Checkbox, Radio, Switch, Typography } from 'antd'
-import React, { useState } from 'react'
+import { Alert, Switch, Typography } from 'antd'
+import { useState } from 'react'
 import { useUpdateUserSettings, useUserSettings } from 'services/user_service'
 
 export interface ProfileActivityDefaultsProps {}

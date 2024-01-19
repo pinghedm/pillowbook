@@ -118,6 +118,7 @@ class Item(TimeStampedModel):
         User, on_delete=models.CASCADE
     )
     parent = models.ForeignKey("Item", on_delete=models.SET_NULL, blank=True, null=True)
+    pinned = BooleanField(default=False)
 
     @property
     def parent_name(self):

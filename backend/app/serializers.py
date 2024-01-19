@@ -80,7 +80,15 @@ class ItemListSerializer(ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ["token", "name", "rating", "item_type", "parent_name", "icon_url"]
+        fields = [
+            "token",
+            "name",
+            "rating",
+            "item_type",
+            "parent_name",
+            "icon_url",
+            "pinned",
+        ]
 
 
 class ItemDetailSerializer(ModelSerializer):
@@ -101,6 +109,7 @@ class ItemDetailSerializer(ModelSerializer):
             "parent_name",
             "parent_token",
             "icon_url",
+            "pinned",
         ]
 
 

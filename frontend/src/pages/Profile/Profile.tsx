@@ -20,6 +20,7 @@ const Profile = ({}: ProfileProps) => {
                         { key: 'basics', label: 'Basics' },
                         { key: 'itemTypes', label: 'Item Types' },
                         { key: 'activityDefaults', label: 'Add Activity Defaults' },
+                        { key: 'homeConfig', label: 'Home Screen Config' },
                     ]}
                     onClick={({ key }) => {
                         navigate({ pathname: key })

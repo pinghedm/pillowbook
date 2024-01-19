@@ -2,7 +2,6 @@ import { ReactNode, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import axios from 'axios'
 import {
-    Link,
     Navigate,
     Outlet,
     RouterProvider,
@@ -21,11 +20,9 @@ import {
     PlusOutlined,
     QuestionOutlined,
     UserOutlined,
-    VideoCameraOutlined,
 } from '@ant-design/icons'
 import Activities from 'pages/Activities/Activities.lazy'
 import AddActivity from 'pages/Activities/AddActivity/AddActivity.lazy'
-import ActivityDetail from 'pages/Activities/ActivityDetail/ActivityDetail.lazy'
 import Login from 'pages/Login/Login.lazy'
 import { useLogout, useUserIsAuthenticated } from 'services/auth_service'
 import Items from 'pages/Items/Items.lazy'
@@ -38,6 +35,7 @@ import { useUserSettings } from 'services/user_service'
 import AddActivityModal from 'pages/AddActivityModal/AddActivityModal.lazy'
 import ProfileActivityDefaults from 'pages/Profile/ProfileActivityDefaults/ProfileActivityDefaults.lazy'
 import ActivityWrapper from 'pages/Activities/ActivityWrapper/ActivityWrapper'
+import ProfileHomeConfig from 'pages/Profile/ProfileHomeConfig/ProfileHomeConfig.lazy'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -266,6 +264,7 @@ const routes = [
             { path: 'basics', element: <ProfileBasics /> },
             { path: 'activityDefaults', element: <ProfileActivityDefaults /> },
             { path: 'itemTypes', element: <ProfileItemTypes /> },
+            { path: 'homeConfig', element: <ProfileHomeConfig /> },
         ],
     },
     {

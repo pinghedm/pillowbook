@@ -6,6 +6,7 @@ import { PaginatedResult, getDjangoShapedFilters, getOrderingString } from './ut
 
 export interface ItemFilterInfoFilters {
     itemTypes: string[]
+    pinned: string[]
 }
 export interface ItemFilterInfo {
     pageNumber: number
@@ -21,6 +22,7 @@ export interface Item {
     item_type: string
     parent_item_type: string
     icon_url: string
+    pinned: boolean
 }
 
 export interface ItemDetail {
@@ -32,6 +34,7 @@ export interface ItemDetail {
     name: string
     parent_name: string
     parent_token?: string
+    pinned: boolean
 }
 
 export const useItems = (

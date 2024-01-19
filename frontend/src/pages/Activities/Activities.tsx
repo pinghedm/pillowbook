@@ -1,12 +1,6 @@
-import {
-    BookOutlined,
-    PlusOutlined,
-    QuestionCircleOutlined,
-    SearchOutlined,
-    StarFilled,
-} from '@ant-design/icons'
-import { Button, Cascader, Input, List, Spin, Typography } from 'antd'
-import React, { ReactNode, useMemo } from 'react'
+import { PlusOutlined, QuestionCircleOutlined, SearchOutlined, StarFilled } from '@ant-design/icons'
+import { Button, Cascader, Input, List, Typography } from 'antd'
+import { useMemo } from 'react'
 import {
     FilterInfo,
     FilterInfoFilters,
@@ -18,8 +12,6 @@ import { capitalizeWords, usePagedResultData } from 'services/utils'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useUserSettings } from 'services/user_service'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useItemTypes } from 'services/item_type_service'
-import { isFilesArray } from '@rjsf/utils'
 
 const PAGE_SIZE = 20
 export interface ActivitiesProps {}
@@ -149,6 +141,7 @@ const Activities = ({}: ActivitiesProps) => {
                 }}
             >
                 <Input
+                    placeholder="Search Activities"
                     allowClear
                     prefix={<SearchOutlined />}
                     style={{ flex: 2, maxWidth: '350px' }}
@@ -161,6 +154,7 @@ const Activities = ({}: ActivitiesProps) => {
                     }}
                 />
                 <Cascader
+                    placeholder="Filter Activities"
                     style={{ flex: 1, maxWidth: '350px' }}
                     allowClear
                     maxTagCount="responsive"

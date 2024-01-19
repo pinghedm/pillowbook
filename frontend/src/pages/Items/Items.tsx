@@ -1,5 +1,7 @@
 import {
     PlusOutlined,
+    PushpinFilled,
+    PushpinOutlined,
     QuestionCircleOutlined,
     QuestionOutlined,
     SearchOutlined,
@@ -14,6 +16,7 @@ import {
     ItemFilterInfoFilters,
     useItemStaticFilters,
     useItems,
+    useUpdateItem,
 } from 'services/item_service'
 import { useItemTypes } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
@@ -26,11 +29,9 @@ const PAGE_SIZE = 20
 const Items = ({}: ItemsProps) => {
     const { data: filterInfo } = useQuery<ItemFilterInfo>({
         queryKey: ['itemList', 'filters'],
-        queryFn: () => ({
-            pageNumber: 1,
-        }),
         initialData: {
             pageNumber: 1,
+            ordering: { key: 'created', order: 'descend' },
         },
     })
 
@@ -70,9 +71,29 @@ const Items = ({}: ItemsProps) => {
                     isLeaf: true,
                 })),
             },
+            {
+                label: 'Pinned',
+                value: 'pinned',
+                isLeaf: false,
+                children: [
+                    {
+                        label: 'False',
+                        value: 'false',
+                        key: 'false',
+                        isLeaf: true,
+                    },
+                    {
+                        label: 'True',
+                        value: 'true',
+                        key: 'true',
+                        isLeaf: true,
+                    },
+                ],
+            },
         ]
         return options
     }, [staticFilters])
+    const updateItemMutation = useUpdateItem()
 
     return (
         <div style={{ height: '100%' }}>
@@ -88,6 +109,7 @@ const Items = ({}: ItemsProps) => {
             >
                 <Input
                     allowClear
+                    placeholder="Search Items"
                     prefix={<SearchOutlined />}
                     style={{ flex: 2, maxWidth: '350px' }}
                     value={filterInfo?.searchQuery ?? ''}
@@ -99,6 +121,7 @@ const Items = ({}: ItemsProps) => {
                     }}
                 />
                 <Cascader
+                    placeholder="Filter Items"
                     style={{ flex: 1, maxWidth: '350px' }}
                     allowClear
                     maxTagCount="responsive"
@@ -145,6 +168,18 @@ const Items = ({}: ItemsProps) => {
                 renderItem={(item, index) => (
                     <Link to={{ pathname: item.token }}>
                         <List.Item
+                            actions={[
+                                <Button
+                                    icon={item.pinned ? <PushpinFilled /> : <PushpinOutlined />}
+                                    onClick={e => {
+                                        e.preventDefault()
+                                        updateItemMutation.mutate({
+                                            token: item.token,
+                                            patch: { pinned: !item.pinned },
+                                        })
+                                    }}
+                                />,
+                            ]}
                             extra={
                                 <div
                                     style={{

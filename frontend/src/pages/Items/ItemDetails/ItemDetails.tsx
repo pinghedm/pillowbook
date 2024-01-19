@@ -9,6 +9,7 @@ import {
     Typography,
     Alert,
     Popconfirm,
+    Switch,
 } from 'antd'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDeleteItem, useItem, useUpdateItem } from 'services/item_service'
@@ -243,6 +244,25 @@ const ItemDetails = ({}: ItemDetailsProps) => {
                 />
             </LabeledFormRow>
 
+            <LabeledFormRow>
+                <Typography.Text>Pinned</Typography.Text>{' '}
+                <Switch
+                    checked={item.pinned}
+                    onChange={checked => {
+                        setSaving(false)
+                        updateItemMutation.mutate(
+                            { token: item.token, patch: { pinned: checked } },
+                            {
+                                onSettled: () => {
+                                    setTimeout(() => {
+                                        setSaving(false)
+                                    }, 300)
+                                },
+                            },
+                        )
+                    }}
+                />
+            </LabeledFormRow>
             <Popconfirm
                 title={`Really delete ${item.name}?`}
                 description="This is not reversible"
