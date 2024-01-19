@@ -1,57 +1,137 @@
-import { RJSFSchema } from '@rjsf/utils'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
-import validator from '@rjsf/validator-ajv8'
 import {
     AutoComplete,
     InputNumber,
     Spin,
-    Form,
     Button,
     Divider,
     Checkbox,
     Input,
     Popover,
     Select,
-    Radio,
-    Switch,
+    Typography,
 } from 'antd'
 import DatePicker from 'components/DatePicker'
-import { useCreateActivity } from 'services/activities_service'
+import { ActivityDetail, CreateActivityType, useCreateActivity } from 'services/activities_service'
 import { useUserSettings } from 'services/user_service'
 import { DateTime } from 'luxon'
 import { PlusOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
-import { useForm } from 'antd/es/form/Form'
-import { ItemDetail, useItem } from 'services/item_service'
-import ActivityDetail from '../ActivityDetail/ActivityDetail.lazy'
+import { useItem } from 'services/item_service'
 export interface AddActivityProps {}
 
 const AddActivity = ({}: AddActivityProps) => {
     const navigate = useNavigate()
     const { type: itemTypeSlug, token } = useParams()
+
     const { data: itemType } = useItemType(itemTypeSlug)
     const { data: parentItemType } = useItemType(itemType?.parent_slug ?? '')
+    const { data: item } = useItem(token)
+
     const { data: userSettings } = useUserSettings()
 
+    const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
+
     const createActivityMutation = useCreateActivity()
-    // form values are not updating correctly for these guys, so for now just control them ourselves
-    const [dateRangeStart, setDateRangeStart] = useState<DateTime | null>(null)
-    const [dateRangeEnd, setDateRangeEnd] = useState<DateTime | null>(null)
+
+    const [newActivity, setNewActivity] = useState<CreateActivityType>({
+        itemDetails: {
+            info: {},
+            item_type: itemTypeSlug ?? '',
+        },
+        activityDetails: {
+            start_time: '',
+            end_time: '',
+            finished: false,
+            pending: false,
+            rating: 0,
+            notes: '',
+            info: {},
+        },
+    })
+    useEffect(() => {
+        if (
+            userSettings?.activityDefaults?.defaultEndToNow &&
+            !newActivity.activityDetails.end_time
+        ) {
+            setNewActivity(a => ({
+                ...a,
+                activityDetails: {
+                    ...a.activityDetails,
+                    end_time: DateTime.fromJSDate(new Date()).toISO() || undefined,
+                },
+            }))
+        }
+        if (
+            userSettings?.activityDefaults?.defaultStartToNow &&
+            !newActivity.activityDetails.start_time
+        ) {
+            setNewActivity(a => ({
+                ...a,
+                activityDetails: {
+                    ...a.activityDetails,
+                    start_time: DateTime.fromJSDate(new Date()).toISO() || undefined,
+                },
+            }))
+        }
+
+        if (userSettings?.activityDefaults?.defaultPending) {
+            setNewActivity(a => ({
+                ...a,
+                activityDetails: { ...a.activityDetails, pending: true },
+            }))
+        }
+        if (userSettings?.activityDefaults?.defaultFinished) {
+            setNewActivity(a => ({
+                ...a,
+                activityDetails: { ...a.activityDetails, finished: true },
+            }))
+        }
+    }, [userSettings, newActivity])
 
     useEffect(() => {
-        if (userSettings?.activityDefaults?.defaultEndToNow && !dateRangeEnd) {
-            setDateRangeEnd(DateTime.fromJSDate(new Date()))
+        if (item && Object.keys(item?.info ?? {}) && !Object.keys(newActivity.itemDetails.info)) {
+            setNewActivity(a => ({ ...a, itemDetails: { ...a.itemDetails, info: item.info } }))
         }
-        if (userSettings?.activityDefaults?.defaultStartToNow && !dateRangeStart) {
-            setDateRangeStart(DateTime.fromJSDate(new Date()))
+        if (item && item.parent_token) {
+            setNewActivity(a => ({
+                ...a,
+                itemDetails: { ...a.itemDetails, parent_token: item.parent_token },
+            }))
         }
-    }, [userSettings, dateRangeStart, dateRangeEnd])
-    const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
+    }, [item, newActivity])
+
     const [popoverOpen, setPopoverOpen] = useState(false)
-    const [form] = useForm()
-    const { data: item, status: itemStatus } = useItem(token)
+
+    const submitAllowed = useCallback(
+        () =>
+            itemType?.item_schema?.required?.every(
+                requiredFieldName => !!newActivity?.itemDetails?.info?.[requiredFieldName],
+            ),
+        [itemType, newActivity],
+    )
+
+    const submit = useCallback(
+        (onSuccess: (activity: ActivityDetail) => void) => {
+            createActivityMutation.mutate(
+                {
+                    ...newActivity,
+                    activityDetails: {
+                        ...newActivity.activityDetails,
+                        start_time: newActivity.activityDetails.start_time || undefined,
+                        end_time: newActivity.activityDetails.end_time || undefined,
+                    },
+                },
+                {
+                    onSuccess: onSuccess,
+                },
+            )
+        },
+
+        [createActivityMutation, newActivity],
+    )
 
     if (!itemType) {
         return <Spin />
@@ -63,105 +143,123 @@ const AddActivity = ({}: AddActivityProps) => {
 
     return (
         <div>
-            Add {itemType.name}
-            <Form
-                initialValues={{
-                    ...(item?.info ?? {}),
-                    item__Parent: item?.parent_token,
-                    activity__Finished: userSettings?.activityDefaults?.defaultFinished,
-                    activity__Pending: userSettings?.activityDefaults?.defaultPending,
-                }}
-                form={form}
-                labelAlign="left"
-                labelWrap
-                labelCol={{ span: 1 }}
-                onFinish={vals => {
-                    const formData = { ...vals }
-                    const activityData = {
-                        start_time: dateRangeStart?.toISO() ?? undefined,
-                        end_time: dateRangeEnd?.toISO() ?? undefined,
-                        finished: vals.activity__Finished,
-                        pending: vals.activity__Pending,
-                        rating: vals.activity__Rating,
-                        notes: vals.activity__Notes,
-                        info: {},
-                    }
-                    const itemData: ItemDetail['info'] = Object.fromEntries(
-                        Object.entries(formData)
-                            .filter(([k, v]) => !Object.keys(activityData).includes(k))
-                            .filter(([k, v]) => !k.startsWith('activity__')),
-                    )
-                    const itemParentToken = itemData?.['item__Parent']
-                    delete itemData['item__Parent']
-                    createActivityMutation.mutate(
-                        {
-                            activityDetails: activityData,
-                            itemDetails: {
-                                item_type: itemType.slug,
-                                info: itemData,
-                                parent_token: itemParentToken,
-                            },
-                        },
-                        {
-                            onSuccess: activity => {
-                                navigate({
-                                    pathname: `/activities/${itemType.slug}/${activity.token}`,
-                                })
-                            },
-                        },
-                    )
-                }}
+            <Typography.Title level={3}>Add {itemType.name}</Typography.Title>
+            <Typography.Title level={4}>Item Information</Typography.Title>
+
+            <div
+                style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '24px' }}
             >
                 {Object.entries(itemType.item_schema.properties ?? {}).map(
                     ([fieldName, fieldData]) =>
                         typeof fieldData === 'boolean' ? null : (
-                            <Form.Item
-                                hasFeedback
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    gap: '8px',
+                                    width: '100%',
+                                    maxWidth: '500px',
+                                }}
                                 key={fieldName}
-                                label={fieldData?.title ?? fieldName}
-                                name={fieldName}
-                                rules={[
-                                    {
-                                        required:
-                                            itemType.item_schema?.required?.includes(fieldName),
-                                        message: `${fieldData?.title ?? fieldName} is required`,
-                                    },
-                                ]}
                             >
+                                <Typography.Text style={{ width: '150px' }}>
+                                    {fieldData?.title ?? fieldName}
+                                </Typography.Text>
                                 {fieldData.type === 'string' ? (
                                     <AutoComplete
+                                        value={newActivity.itemDetails.info?.[fieldName] || ''}
+                                        onSelect={val => {
+                                            setNewActivity(a => ({
+                                                ...a,
+                                                itemDetails: {
+                                                    ...a.itemDetails,
+                                                    info: {
+                                                        ...a.itemDetails.info,
+                                                        [fieldName]: val,
+                                                    },
+                                                },
+                                            }))
+                                        }}
+                                        onChange={val => {
+                                            setNewActivity(a => ({
+                                                ...a,
+                                                itemDetails: {
+                                                    ...a.itemDetails,
+                                                    info: {
+                                                        ...a.itemDetails.info,
+                                                        [fieldName]: val,
+                                                    },
+                                                },
+                                            }))
+                                        }}
                                         allowClear
                                         filterOption
-                                        style={{ maxWidth: '300px' }}
+                                        style={{ maxWidth: '300px', flex: 1 }}
                                         options={autocompleteChoices?.[fieldName]}
+                                        status={
+                                            itemType.item_schema?.required?.includes(fieldName) &&
+                                            !newActivity.itemDetails.info?.[fieldName]
+                                                ? 'error'
+                                                : undefined
+                                        }
                                     />
                                 ) : fieldData.type === 'number' ? (
-                                    <InputNumber />
+                                    <InputNumber
+                                        value={newActivity.itemDetails.info?.[fieldName] || ''}
+                                        onChange={val => {
+                                            setNewActivity(a => ({
+                                                ...a,
+                                                itemDetails: {
+                                                    ...a.itemDetails,
+                                                    info: {
+                                                        ...a.itemDetails.info,
+                                                        [fieldName]: Number(val),
+                                                    },
+                                                },
+                                            }))
+                                        }}
+                                    />
                                 ) : (
                                     <div>UnsupportedType</div>
                                 )}
-                            </Form.Item>
+                            </div>
                         ),
                 )}
                 {parentItemType ? (
-                    <Form.Item label={parentItemType.name}>
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: '8px',
+                            width: '100%',
+                            maxWidth: '500px',
+                        }}
+                    >
+                        <Typography.Text style={{ width: '150px' }}>Item Parent</Typography.Text>
                         <div
                             style={{
                                 display: 'flex',
                                 flexDirection: 'row',
                                 gap: '5px',
                                 alignItems: 'center',
+                                flex: 1,
                             }}
                         >
-                            <Form.Item name="item__Parent">
-                                <Select
-                                    allowClear
-                                    style={{ width: '300px' }}
-                                    filterOption
-                                    options={autocompleteChoices?.[parentItemType.slug]}
-                                    showSearch
-                                />
-                            </Form.Item>
+                            <Select
+                                value={newActivity?.itemDetails?.parent_token}
+                                placeholder="Choose Parent"
+                                allowClear
+                                style={{ width: '300px' }}
+                                filterOption
+                                options={autocompleteChoices?.[parentItemType.slug]}
+                                showSearch
+                                onChange={val => {
+                                    setNewActivity(a => ({
+                                        ...a,
+                                        itemDetails: { ...a.itemDetails, parent_token: val },
+                                    }))
+                                }}
+                            />
                             <Popover
                                 open={popoverOpen}
                                 onOpenChange={o => {
@@ -173,10 +271,15 @@ const AddActivity = ({}: AddActivityProps) => {
                                         <AddItem
                                             itemTypeSlug={parentItemType.slug}
                                             onFinishCreated={newItem => {
-                                                form.setFieldValue('item__Parent', newItem.token)
+                                                setNewActivity(a => ({
+                                                    ...a,
+                                                    itemDetails: {
+                                                        ...a.itemDetails,
+                                                        parent_token: newItem.token,
+                                                    },
+                                                }))
                                                 setPopoverOpen(false)
                                             }}
-                                            // setAsParentTo={item.token}
                                         />
                                     </div>
                                 }
@@ -184,44 +287,98 @@ const AddActivity = ({}: AddActivityProps) => {
                                 <Button icon={<PlusOutlined />} />
                             </Popover>
                         </div>
-                    </Form.Item>
+                    </div>
                 ) : null}
                 <Divider />
-                <Form.Item
-                    name="activity__Pending"
-                    label="Pending"
-                    valuePropName="checked"
+                <Typography.Title level={4}>Activity Information</Typography.Title>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                    }}
                 >
-                    <Checkbox />
-                </Form.Item>
-                <Form.Item
-                    valuePropName="checked"
-                    name="activity__Finished"
-                    label="Finishes Item"
+                    <div>
+                        <Checkbox
+                            checked={newActivity.activityDetails.pending}
+                            onChange={e => {
+                                setNewActivity(a => ({
+                                    ...a,
+                                    activityDetails: {
+                                        ...a.activityDetails,
+                                        pending: e.target.checked,
+                                    },
+                                }))
+                            }}
+                        />{' '}
+                        <Typography.Text>Pending</Typography.Text>
+                    </div>
+                    <div>
+                        <Checkbox
+                            checked={newActivity.activityDetails.finished}
+                            onChange={e => {
+                                setNewActivity(a => ({
+                                    ...a,
+                                    activityDetails: {
+                                        ...a.activityDetails,
+                                        finished: e.target.checked,
+                                    },
+                                }))
+                            }}
+                        />{' '}
+                        <Typography.Text>Finishes Item</Typography.Text>
+                    </div>
+                </div>
+
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '16px',
+                        alignItems: 'flex-start',
+                    }}
                 >
-                    <Checkbox />
-                </Form.Item>
-                <Form.Item
-                    label="Date Range"
-                    getValueProps={i => ({ value: DateTime.fromJSDate(i) })}
-                >
+                    <Typography.Text>Date Range</Typography.Text>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                        <div>
-                            <DatePicker.RangePicker
-                                showTime
-                                allowEmpty={[true, true]}
-                                value={[dateRangeStart, dateRangeEnd]}
-                                onChange={dates => {
-                                    setDateRangeStart(dates?.[0] ?? null)
-                                    setDateRangeEnd(dates?.[1] ?? null)
-                                }}
-                            />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'row', gap: '15px' }}>
+                        <DatePicker.RangePicker
+                            showTime
+                            allowEmpty={[true, true]}
+                            value={[
+                                newActivity.activityDetails.start_time
+                                    ? DateTime.fromISO(newActivity.activityDetails.start_time)
+                                    : null,
+                                newActivity.activityDetails.end_time
+                                    ? DateTime.fromISO(newActivity.activityDetails.end_time)
+                                    : null,
+                            ]}
+                            onChange={dates => {
+                                setNewActivity(a => ({
+                                    ...a,
+                                    activityDetails: {
+                                        ...a.activityDetails,
+                                        start_time: dates?.[0]?.toISO() || '',
+                                        end_time: dates?.[1]?.toISO() || '',
+                                    },
+                                }))
+                            }}
+                        />
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                            }}
+                        >
                             <Button
                                 type="text"
                                 onClick={() => {
-                                    setDateRangeStart(DateTime.now())
+                                    setNewActivity(a => ({
+                                        ...a,
+                                        activityDetails: {
+                                            ...a.activityDetails,
+                                            start_time: DateTime.now().toISO(),
+                                        },
+                                    }))
                                 }}
                             >
                                 Set Start To Now
@@ -229,37 +386,99 @@ const AddActivity = ({}: AddActivityProps) => {
                             <Button
                                 type="text"
                                 onClick={() => {
-                                    setDateRangeEnd(DateTime.now())
+                                    setNewActivity(a => ({
+                                        ...a,
+                                        activityDetails: {
+                                            ...a.activityDetails,
+                                            end_time: DateTime.now().toISO(),
+                                        },
+                                    }))
                                 }}
                             >
                                 Set End To Now
                             </Button>
                         </div>
                     </div>
-                </Form.Item>
+                </div>
 
-                <Form.Item
-                    name="activity__Rating"
-                    label="Rating"
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '8px',
+                        width: '100%',
+                        maxWidth: '500px',
+                        marginTop: '16px',
+                    }}
                 >
-                    <InputNumber max={userSettings?.ratingMax ?? 5} />
-                </Form.Item>
-                <Form.Item
-                    name="activity__Notes"
-                    label="Notes"
+                    <Typography.Text style={{ width: '150px' }}>Rating</Typography.Text>
+                    <InputNumber
+                        max={userSettings?.ratingMax ?? 5}
+                        value={newActivity.activityDetails.rating || ''}
+                        onChange={val => {
+                            setNewActivity(a => ({
+                                ...a,
+                                activityDetails: { ...a.activityDetails, rating: val || undefined },
+                            }))
+                        }}
+                    />
+                </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '8px',
+                        width: '100%',
+                    }}
                 >
-                    <Input.TextArea style={{ maxWidth: '400px' }} />
-                </Form.Item>
-                <Form.Item>
+                    <Typography.Text style={{ width: '150px' }}>Notes</Typography.Text>
+                    <Input.TextArea
+                        style={{ maxWidth: '400px' }}
+                        value={newActivity.activityDetails.notes || ''}
+                        onChange={e => {
+                            setNewActivity(a => ({
+                                ...a,
+                                activityDetails: { ...a.activityDetails, notes: e.target.value },
+                            }))
+                        }}
+                    />
+                </div>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: '8px',
+                        marginTop: '16px',
+                        marginBottom: '16px',
+                    }}
+                >
                     <Button
+                        disabled={!submitAllowed}
                         loading={createActivityMutation.isPending}
                         type="primary"
-                        htmlType="submit"
+                        onClick={() => {
+                            submit(activity => {
+                                navigate({
+                                    pathname: `/activities/${itemType.slug}/${activity.token}`,
+                                })
+                            })
+                        }}
                     >
                         Add
                     </Button>
-                </Form.Item>
-            </Form>
+                    <Button
+                        disabled={!submitAllowed}
+                        loading={createActivityMutation.isPending}
+                        onClick={() => {
+                            submit(activity => {
+                                window.location.reload()
+                            })
+                        }}
+                    >
+                        Save and Add Another
+                    </Button>
+                </div>
+            </div>
         </div>
     )
 }

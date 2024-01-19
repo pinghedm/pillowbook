@@ -35,7 +35,7 @@ const Home = ({}: HomeProps) => {
     const markFinished = (item: Activity) => {
         activityUpdateMutation.mutate({
             token: item.token,
-            patch: { pending: false, finished: true },
+            patch: { pending: false },
         })
     }
 

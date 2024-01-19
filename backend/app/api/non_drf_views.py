@@ -16,7 +16,7 @@ def get_item_autocomplete_values(request: HttpRequest, item_slug: str) -> JsonRe
             .distinct()
         )
         auto_complete_choices[field_name] = [
-            {"label": v, "valuel": v} for v in vals if v is not None
+            {"label": v, "value": v} for v in vals if v is not None
         ]
     if item_type.parent_slug:
         items_of_parent_type = Item.objects.filter(
