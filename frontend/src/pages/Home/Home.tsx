@@ -5,6 +5,7 @@ import { Link, Outlet } from 'react-router-dom'
 
 import { Activity, useActivities, useUpdateActivity } from 'services/activities_service'
 import { usePagedResultData } from 'services/utils'
+import { DateTime } from 'luxon'
 
 export interface HomeProps {}
 
@@ -31,13 +32,6 @@ const Home = ({}: HomeProps) => {
     const { data: unfinished } = usePagedResultData(unfinishedPagedResult)
 
     const activityUpdateMutation = useUpdateActivity()
-
-    const markFinished = (item: Activity) => {
-        activityUpdateMutation.mutate({
-            token: item.token,
-            patch: { pending: false },
-        })
-    }
 
     return (
         <div style={{}}>
@@ -69,9 +63,14 @@ const Home = ({}: HomeProps) => {
                         <List.Item.Meta title={item.item_name} />
                         <Button
                             type="primary"
-                            onClick={() => markFinished(item)}
+                            onClick={() => {
+                                activityUpdateMutation.mutate({
+                                    token: item.token,
+                                    patch: { pending: false },
+                                })
+                            }}
                         >
-                            Mark Finished
+                            Remove Pending
                         </Button>
                     </List.Item>
                 )}
@@ -88,9 +87,14 @@ const Home = ({}: HomeProps) => {
                         <List.Item.Meta title={item.item_name} />
                         <Button
                             type="primary"
-                            onClick={() => markFinished(item)}
+                            onClick={() => {
+                                activityUpdateMutation.mutate({
+                                    token: item.token,
+                                    patch: { end_time: DateTime.now().toISO() },
+                                })
+                            }}
                         >
-                            Mark Finished
+                            Set End Time
                         </Button>
                     </List.Item>
                 )}
