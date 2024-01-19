@@ -8,9 +8,10 @@ import {
     Select,
     Typography,
     Alert,
+    Popconfirm,
 } from 'antd'
-import { useParams } from 'react-router-dom'
-import { useItem, useUpdateItem } from 'services/item_service'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useDeleteItem, useItem, useUpdateItem } from 'services/item_service'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
 import { PlusOutlined } from '@ant-design/icons'
@@ -29,6 +30,8 @@ const ItemDetails = ({}: ItemDetailsProps) => {
     const { data: userSettings } = useUserSettings()
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType?.slug ?? '')
     const [saving, setSaving] = useState(false)
+    const deleteItemMutation = useDeleteItem()
+    const navigate = useNavigate()
 
     if (!item || !itemType) {
         return <Spin />
@@ -239,6 +242,24 @@ const ItemDetails = ({}: ItemDetailsProps) => {
                     }}
                 />
             </LabeledFormRow>
+
+            <Popconfirm
+                title={`Really delete ${item.name}?`}
+                description="This is not reversible"
+                onConfirm={() => {
+                    deleteItemMutation.mutate(item.token, {
+                        onSuccess: () => {
+                            navigate({ pathname: '/items', search: window.location.search })
+                        },
+                    })
+                }}
+                okText="Yes, delete  it"
+                cancelText="No, leave it"
+            >
+                <div>
+                    <Button danger>Delete Item</Button>
+                </div>
+            </Popconfirm>
         </FormWrap>
     )
 }

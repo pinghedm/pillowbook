@@ -96,6 +96,27 @@ export const useItem = (token?: string) => {
     return query
 }
 
+export const useDeleteItem = () => {
+    const _delete = async (token: string) => {
+        const res = await axios.delete('/api/item/' + token)
+        return res.data
+    }
+    const queryClient = useQueryClient()
+    const mutation = useMutation({
+        mutationFn: (token: string) => _delete(token),
+
+        onMutate: async () => {
+            await queryClient.cancelQueries({ queryKey: ['items'] })
+            await queryClient.cancelQueries({ queryKey: ['autocomplete'] })
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['items'] })
+            queryClient.invalidateQueries({ queryKey: ['autocomplete'] })
+        },
+    })
+    return mutation
+}
+
 export const useUpdateItem = () => {
     const _patch = async (token: string, patch: Partial<ItemDetail>) => {
         const res = await axios.patch('/api/item/' + token, patch)

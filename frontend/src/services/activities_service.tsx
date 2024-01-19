@@ -124,6 +124,22 @@ export const useActivities = (
     return query
 }
 
+export const useDeleteActivity = () => {
+    const _delete = async (token: string) => {
+        const res = await axios.delete('/api/activity/' + token)
+        return res.data
+    }
+    const queryClient = useQueryClient()
+    const mutation = useMutation({
+        mutationFn: (token: string) => _delete(token),
+        onMutate: () => queryClient.cancelQueries({ queryKey: ['activities'] }),
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['activities'] })
+        },
+    })
+    return mutation
+}
+
 export const useActivity = (token?: string) => {
     const _get = async (token: string) => {
         const res = await axios.get<ActivityDetail>('/api/activity/' + token)
@@ -148,9 +164,7 @@ export const useUpdateActivity = () => {
         mutationFn: ({ token, patch }: { token: string; patch: Partial<ActivityDetail> }) =>
             _patch(token, patch),
 
-        onMutate: () => {
-            queryClient.cancelQueries({ queryKey: ['activities'] })
-        },
+        onMutate: () => queryClient.cancelQueries({ queryKey: ['activities'] }),
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['activities'] })
         },

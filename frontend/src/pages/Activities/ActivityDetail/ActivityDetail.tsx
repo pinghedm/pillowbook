@@ -6,6 +6,7 @@ import {
     Divider,
     Input,
     InputNumber,
+    Popconfirm,
     Select,
     Spin,
     Typography,
@@ -14,8 +15,8 @@ import DatePicker from 'components/DatePicker'
 import { CheckboxWrapper, FormWrap, LabeledFormRow } from 'components/FormWrappers'
 import { DateTime } from 'luxon'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { useActivity, useUpdateActivity } from 'services/activities_service'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useActivity, useDeleteActivity, useUpdateActivity } from 'services/activities_service'
 import { useItem } from 'services/item_service'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
@@ -34,6 +35,8 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType?.slug ?? '')
 
     const [saving, setSaving] = useState(false)
+    const navigate = useNavigate()
+    const deleteActivityMutation = useDeleteActivity()
     if (!itemType || !activity || !item) {
         return <Spin />
     }
@@ -274,6 +277,26 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                         }}
                     />
                 </LabeledFormRow>
+                <Popconfirm
+                    title="Really delete this activity?"
+                    description="This is not reversible"
+                    onConfirm={() => {
+                        deleteActivityMutation.mutate(activity.token, {
+                            onSuccess: () => {
+                                navigate({
+                                    pathname: '/activities',
+                                    search: window.location.search,
+                                })
+                            },
+                        })
+                    }}
+                    okText="Yes, delete  it"
+                    cancelText="No, leave it"
+                >
+                    <div>
+                        <Button danger>Delete Item</Button>
+                    </div>
+                </Popconfirm>
             </FormWrap>
         </div>
     )

@@ -56,11 +56,11 @@ export const useUpdateItemType = () => {
     const mutation = useMutation({
         mutationFn: ({ slug, patch }: { slug: string; patch: UpdateItemTypeType }) =>
             _patch(slug, patch),
-        onMutate: () => {
-            queryClient.cancelQueries({ queryKey: ['itemTypes'] })
-            queryClient.cancelQueries({ queryKey: ['autocomplete'] })
-            queryClient.cancelQueries({ queryKey: ['items'] })
-            queryClient.cancelQueries({ queryKey: ['activities'] })
+        onMutate: async () => {
+            await queryClient.cancelQueries({ queryKey: ['itemTypes'] })
+            await queryClient.cancelQueries({ queryKey: ['autocomplete'] })
+            await queryClient.cancelQueries({ queryKey: ['items'] })
+            await queryClient.cancelQueries({ queryKey: ['activities'] })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['itemTypes'] })

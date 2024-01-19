@@ -8,6 +8,7 @@ import {
     Divider,
     Input,
     Modal,
+    Popconfirm,
     Select,
     Switch,
     Typography,
@@ -641,15 +642,17 @@ const EditItemTypeModal = ({
                         <PlusOutlined /> Add New Field
                     </Button>
                 ) : null}
-                <Button
-                    danger
-                    onClick={() => {
-                        // TODO: probably have a confirmation on here, cause this is going to delete all items and activities of this type also
+                <Popconfirm
+                    title="Really delete this item type?"
+                    description="This is not reversible"
+                    onConfirm={() => {
                         deleteItemTypeMutation.mutate(itemType.slug, { onSuccess: onCancel })
                     }}
+                    okText="Yes, delete  it"
+                    cancelText="No, leave it"
                 >
-                    Delete Item Type
-                </Button>
+                    <Button danger>Delete Item Type</Button>
+                </Popconfirm>
             </div>
         </Modal>
     )
