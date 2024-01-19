@@ -78,7 +78,7 @@ const Activities = ({}: ActivitiesProps) => {
                 })),
             },
             {
-                label: 'Completed',
+                label: 'Finished Item',
                 value: 'completed',
                 isLeaf: false,
                 children: [
@@ -94,6 +94,34 @@ const Activities = ({}: ActivitiesProps) => {
             {
                 label: 'Pending',
                 value: 'pending',
+                isLeaf: false,
+                children: [
+                    {
+                        value: 'true',
+                        label: 'True',
+                        key: 'true',
+                        isLeaf: true,
+                    },
+                    { value: 'false', label: 'False', key: 'false', isLeaf: true },
+                ],
+            },
+            {
+                label: 'Has Start Time',
+                value: 'hasStartTime',
+                isLeaf: false,
+                children: [
+                    {
+                        value: 'true',
+                        label: 'True',
+                        key: 'true',
+                        isLeaf: true,
+                    },
+                    { value: 'false', label: 'False', key: 'false', isLeaf: true },
+                ],
+            },
+            {
+                label: 'Has End Time',
+                value: 'hasEndTime',
                 isLeaf: false,
                 children: [
                     {
