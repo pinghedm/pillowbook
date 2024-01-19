@@ -143,6 +143,7 @@ class ActivityFilterSet(FilterSet):
     completed = CharInFilter(method="filter_by_completed")
     pending = CharInFilter(method="filter_by_pending")
     hasEndTime = CharInFilter(method="filter_by_ended")
+    hasStartTime = CharFilter(method="filter_by_started")
 
     def filter_by_completed(self, queryset, name, value):
         # tragically cascader cant use bool, so we're going to get back the strings 'false' and 'true'
@@ -166,6 +167,13 @@ class ActivityFilterSet(FilterSet):
             queryset = queryset.filter(end_time__isnull=True)
         if "true" in value:
             queryset = queryset.filter(end_time__isnull=False)
+        return queryset
+    
+    def filter_by_started(self, queryset, name, value):
+        if "false" in value:
+            queryset = queryset.filter(start_time__isnull=True)
+        if "true" in value:
+            queryset = queryset.filter(start_time__isnull=False)
         return queryset
     
     class Meta:

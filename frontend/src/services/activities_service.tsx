@@ -84,6 +84,7 @@ export interface FilterInfoFilters {
     items: string[]
     pending: string[] // tragically, cascader doesnt allow bool
     hasEndTime: string[]
+    hasStartTime: string[]
 }
 
 export interface FilterInfo {

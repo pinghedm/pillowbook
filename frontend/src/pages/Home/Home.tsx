@@ -16,7 +16,7 @@ const Home = ({}: HomeProps) => {
     const { data: upcomingPagedResult, isPending: upcomingPending, fetchStatus: upcomingStatus } = useActivities(1, 5, undefined, {completed:['false'], pending:['true']})
     const { data: upcoming } = usePagedResultData(upcomingPagedResult)
 
-    const { data: unfinishedPagedResult, isPending: unfinishedPending, fetchStatus: unfinishedStatus } = useActivities(1, 5, undefined, {completed:['false'], pending:['false'], hasEndTime:['false']})
+    const { data: unfinishedPagedResult, isPending: unfinishedPending, fetchStatus: unfinishedStatus } = useActivities(1, 5, undefined, { hasEndTime:['false'], hasStartTime:['true']})
     const { data: unfinished } = usePagedResultData(unfinishedPagedResult)
 
     const activityUpdateMutation = useUpdateActivity()
@@ -56,7 +56,7 @@ const Home = ({}: HomeProps) => {
                     )} 
                 />
             
-            <Typography.Title level={2}>Unfinished Activities</Typography.Title>
+            <Typography.Title level={2}>In Progress Activities</Typography.Title>
             <List 
                 loading={unfinishedPending && unfinishedStatus !== 'idle'} 
                 size='small' 
