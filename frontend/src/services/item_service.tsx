@@ -91,7 +91,7 @@ export const useItem = (token?: string) => {
     const query = useQuery({
         queryKey: ['items', token],
         queryFn: () => _get(token ?? ''),
-        enabled: token?.startsWith('I'),
+        enabled: token?.startsWith('I') ?? false,
     })
     return query
 }

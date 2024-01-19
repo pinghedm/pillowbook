@@ -5,7 +5,8 @@ export interface UserSettings {
     ratingMax?: number
     itemTypesInQuickMenu?: string[]
     activityDefaults: {
-        defaultStatus?: 'pending' | 'finished' | ''
+        defaultPending?: boolean
+        defaultFinished?: boolean
         defaultStartToNow?: boolean
         defaultEndToNow?: boolean
     }

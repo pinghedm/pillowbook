@@ -15,6 +15,7 @@ import {
     Popover,
     Select,
     Radio,
+    Switch,
 } from 'antd'
 import DatePicker from 'components/DatePicker'
 import { useCreateActivity } from 'services/activities_service'
@@ -50,27 +51,25 @@ const AddActivity = ({}: AddActivityProps) => {
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
     const [popoverOpen, setPopoverOpen] = useState(false)
     const [form] = useForm()
-    const {data: item, status: itemStatus} = useItem(token)
+    const { data: item, status: itemStatus } = useItem(token)
 
     if (!itemType) {
         return <Spin />
     }
 
-    if (token && !item){
-        return <Spin/>
-     }
-
+    if (token && !item) {
+        return <Spin />
+    }
 
     return (
         <div>
             Add {itemType.name}
             <Form
                 initialValues={{
-                    ...item?.info??{},
+                    ...(item?.info ?? {}),
                     item__Parent: item?.parent_token,
-                    activity__FinishedOrPending:
-                        userSettings?.activityDefaults?.defaultStatus ?? '',
-                    
+                    activity__Finished: userSettings?.activityDefaults?.defaultFinished,
+                    activity__Pending: userSettings?.activityDefaults?.defaultPending,
                 }}
                 form={form}
                 labelAlign="left"
@@ -81,8 +80,8 @@ const AddActivity = ({}: AddActivityProps) => {
                     const activityData = {
                         start_time: dateRangeStart?.toISO() ?? undefined,
                         end_time: dateRangeEnd?.toISO() ?? undefined,
-                        finished: vals.activity__FinishedOrPending === 'finished',
-                        pending: vals.activity__FinishedOrPending === 'pending',
+                        finished: vals.activity__Finished,
+                        pending: vals.activity__Pending,
                         rating: vals.activity__Rating,
                         notes: vals.activity__Notes,
                         info: {},
@@ -105,7 +104,9 @@ const AddActivity = ({}: AddActivityProps) => {
                         },
                         {
                             onSuccess: activity => {
-                                navigate({ pathname: `/activities/${itemType.slug}/${activity.token}` })
+                                navigate({
+                                    pathname: `/activities/${itemType.slug}/${activity.token}`,
+                                })
                             },
                         },
                     )
@@ -187,14 +188,18 @@ const AddActivity = ({}: AddActivityProps) => {
                 ) : null}
                 <Divider />
                 <Form.Item
-                    name="activity__FinishedOrPending"
-                    label="Status"
+                    name="activity__Pending"
+                    label="Pending"
+                    valuePropName="checked"
                 >
-                    <Radio.Group>
-                        <Radio value="pending">Pending</Radio>
-                        <Radio value="finished">Finished</Radio>
-                        <Radio value="">None</Radio>
-                    </Radio.Group>
+                    <Checkbox />
+                </Form.Item>
+                <Form.Item
+                    valuePropName="checked"
+                    name="activity__Finished"
+                    label="Finishes Item"
+                >
+                    <Checkbox />
                 </Form.Item>
                 <Form.Item
                     label="Date Range"

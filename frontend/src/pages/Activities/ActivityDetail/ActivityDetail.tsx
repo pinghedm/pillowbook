@@ -73,11 +73,9 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                 labelCol={{ span: 1 }}
                 initialValues={{
                     ...item?.info,
-                    activity__FinishedOrPending: activity.finished
-                        ? 'finished'
-                        : activity.pending
-                          ? 'pending'
-                          : '',
+                    activity__Finished: activity.finished,
+                    activity__Pending: activity.pending,
+
                     activity__Rating: activity?.rating
                         ? activity?.rating * (userSettings?.ratingMax ?? 5)
                         : undefined,
@@ -152,14 +150,18 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                 ) : null}
                 <Divider />
                 <Form.Item
-                    name="activity__FinishedOrPending"
-                    label="Status"
+                    name="activity__Pending"
+                    label="Pending"
+                    valuePropName="checked"
                 >
-                    <Radio.Group>
-                        <Radio value="pending">Pending</Radio>
-                        <Radio value="finished">Finished</Radio>
-                        <Radio value="">None</Radio>
-                    </Radio.Group>
+                    <Checkbox />
+                </Form.Item>
+                <Form.Item
+                    valuePropName="checked"
+                    name="activity__Finished"
+                    label="Finishes Item"
+                >
+                    <Checkbox />
                 </Form.Item>
                 <Form.Item
                     label="Date Range"

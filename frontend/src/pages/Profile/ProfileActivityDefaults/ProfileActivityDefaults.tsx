@@ -19,10 +19,55 @@ const ProfileActivityDefaults = ({}: ProfileActivityDefaultsProps) => {
                 ) : null}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '10px' }}>
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <Typography.Title level={4}>Status</Typography.Title>
-                    New activities should default to
-                    <Radio.Group
+                    <div>
+                        <Switch
+                            checked={userSettings?.activityDefaults?.defaultPending}
+                            onChange={checked => {
+                                setSaving(true)
+                                userSettingsMutation.mutate(
+                                    {
+                                        ...userSettings,
+                                        activityDefaults: {
+                                            ...(userSettings?.activityDefaults ?? {}),
+                                            defaultPending: checked,
+                                        },
+                                    },
+                                    {
+                                        onSuccess: () => {
+                                            setSaving(false)
+                                        },
+                                    },
+                                )
+                            }}
+                        />{' '}
+                        New activities should default to Pending
+                    </div>
+                    <div>
+                        <Switch
+                            checked={userSettings?.activityDefaults?.defaultFinished}
+                            onChange={checked => {
+                                setSaving(true)
+                                userSettingsMutation.mutate(
+                                    {
+                                        ...userSettings,
+                                        activityDefaults: {
+                                            ...(userSettings?.activityDefaults ?? {}),
+                                            defaultFinished: checked,
+                                        },
+                                    },
+                                    {
+                                        onSuccess: () => {
+                                            setSaving(false)
+                                        },
+                                    },
+                                )
+                            }}
+                        />{' '}
+                        New activities should default to Close out Item
+                    </div>
+                    {/*<Radio.Group
                         value={userSettings?.activityDefaults?.defaultStatus ?? ''}
                         onChange={e => {
                             setSaving(true)
@@ -45,7 +90,7 @@ const ProfileActivityDefaults = ({}: ProfileActivityDefaultsProps) => {
                         <Radio value="">Nothing</Radio>
                         <Radio value="pending">Pending</Radio>
                         <Radio value="finished">Finished</Radio>
-                    </Radio.Group>
+                    </Radio.Group>*/}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <Typography.Title level={4}>Times</Typography.Title>
