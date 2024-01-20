@@ -1,0 +1,24 @@
+:8100 {
+	handle_path /static/* {
+		file_server * {
+			root staticfiles
+		}
+	}
+
+	handle_path /admin/* {
+		reverse_proxy backend:8000 {
+		}
+	}
+
+	handle_path /api/* {
+		reverse_proxy backend:8000 {
+		}
+	}
+
+	handle_path /* {
+			root * dist
+			try_files {path} /index.html
+			file_server
+		}
+
+}

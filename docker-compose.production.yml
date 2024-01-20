@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  backend:
+    extends:
+      file: backend/docker-compose.production.yml
+      service: backend
+    depends_on:
+      - db
+  db:
+    extends:
+      file: backend/docker-compose.production.yml
+      service: db
+  frontend:
+    extends:
+      file: frontend/docker-compose.production.yml
+      service: frontend
+
+  caddy:
+    image: caddy:2.7.6-alpine
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 8100:8100
+    volumes:
+      - staticfiles:/srv/staticfiles:ro
+      - dist:/srv/dist
+      - caddy_data:/data
+      - ./prod.caddy:/etc/caddy/Caddyfile
+
+volumes:
+  db-data_prod:
+  media_root_prod:
+  app:
+  caddy_data:
+  staticfiles:
+  dist:
+  app_backed_prod:

@@ -1,0 +1,40 @@
+version: '3'
+
+# pass argument to allow remote docker daemon with -H ssh://[host]
+tasks:
+  pip-compile:
+    desc: create requirements.txt from requirements.in
+    cmds:
+      - docker compose -f docker-compose.production.yml run --build backend pip-compile
+      - docker compose -f docker-compose.production.yml run --build backend pip-compile requirements-dev.in
+    sources:
+      - backend/requirements.in
+      - backend/requirements-dev.in
+    generates:
+      - backend/requirements.txt
+      - backend/requirements-dev.txt
+
+  shell:
+    dotenv: ['backend/.env.prod']
+    desc: open a shell
+    cmds:
+      - docker compose -f docker-compose.production.yml run -e SECRET_KEY=${SECRET_KEY} --build backend sh
+    deps: [pip-compile]
+
+  gunicorn:
+    dotenv: ['backend/.env.prod']
+    desc: run daemon
+    cmds:
+      - docker compose -f docker-compose.production.yml run --build backend python manage.py collectstatic --no-input
+      - docker compose -f docker-compose.production.yml up --build backend
+    deps: [pip-compile]
+
+  build_fe:
+    cmds:
+      - docker compose -f docker-compose.production.yml run --build frontend npm run build
+
+  caddy:
+    cmds:
+      - task: build_fe
+      - docker compose -f docker-compose.production.yml up --build caddy
+    deps: [gunicorn]

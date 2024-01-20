@@ -22,4 +22,5 @@ class UserManager(BaseUserManager):
         self, email: str, password: str, **extra_fields: dict[str, Any]
     ):
         extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_staff", True)
         return self._create_user(email, password, **extra_fields)

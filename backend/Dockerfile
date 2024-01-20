@@ -24,6 +24,11 @@ FROM python:3.12-alpine
     RUN chown user /app
     RUN mkdir /app/media
     RUN chown user /app/media
+
+    # pull into prod file
+    RUN mkdir /app/staticfiles
+    RUN chown user /app/staticfiles
+
     USER user
 
     ENTRYPOINT 'scripts/entrypoint.sh'

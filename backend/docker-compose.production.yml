@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  backend:
+    extends:
+      file: ./docker-compose.yml
+      service: backend
+    stdin_open: false
+    volumes:
+      - media_root_prod:/app/media
+      - staticfiles:/app/staticfiles
+      - app_backed_prod:/app
+    environment:
+      DEBUG: false
+    restart: unless-stopped
+
+    command: gunicorn -b "0.0.0.0:8000" --workers=3 --preload --log-level debug backend.wsgi
+
+  db:
+    extends:
+      file: ./docker-compose.yml
+      service: db
+    volumes:
+      - db-data_prod:/var/lib/postgresql/data
+    # ports:
+    restart: unless-stopped
+
+volumes:
+  db-data_prod:
+  media_root_prod:
+  staticfiles:
+  # app_backed_prod:

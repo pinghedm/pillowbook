@@ -21,11 +21,13 @@ services:
       context: .
       dockerfile: ./Dockerfile
     volumes:
+      # need to make 3rd file so prod can inherit from that but not get this
       - .:/app
       - media_root:/app/media
 
     ports:
       - 8000:8000
+
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     entrypoint: scripts/entrypoint.sh
     environment:
@@ -36,4 +38,5 @@ services:
       - db
 
 volumes:
-  db-data: media_root
+  db-data:
+  media_root:

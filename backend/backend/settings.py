@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from backend import env
+import os
 from corsheaders.defaults import default_headers
 
 
@@ -28,7 +29,7 @@ SECRET_KEY = env.SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.DEBUG
 
-ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -136,7 +137,7 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8100"]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS: list[str] = list(default_headers) + ["x-csrftoken"]
 
@@ -163,3 +164,7 @@ if DEBUG:
 
 MEDIA_ROOT = "/app/media"
 MEDIA_URL = "media/"
+
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_URL = env.STATIC_URL
