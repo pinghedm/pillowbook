@@ -93,7 +93,11 @@ const AddActivity = ({}: AddActivityProps) => {
     }, [userSettings, newActivity])
 
     useEffect(() => {
-        if (item && Object.keys(item?.info ?? {}) && !Object.keys(newActivity.itemDetails.info)) {
+        if (
+            item &&
+            Object.keys(item?.info ?? {}).length &&
+            !Object.keys(newActivity.itemDetails.info).length
+        ) {
             setNewActivity(a => ({ ...a, itemDetails: { ...a.itemDetails, info: item.info } }))
         }
         if (item && item.parent_token) {

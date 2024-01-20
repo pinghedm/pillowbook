@@ -3,3 +3,5 @@ __pycache__/
 backend/pyrightconfig.json
 .task/
 .idea/
+backend/.env.prod
+backend/staticfiles
