@@ -3,25 +3,23 @@ on: [push, pull_request]
 
 jobs:
   pre_job:
-      runs-on: ubuntu-latest
-      outputs:
-          should_skip: ${{ steps.skip_check.outputs.should_skip }}
-          paths_result: ${{ steps.skip_check.outputs.paths_result }}
-      steps:
-          - id: skip_check
-            uses: fkirc/skip-duplicate-actions@master
-            with:
-                cancel_others: 'true'
-                skip_after_successful_duplicate: 'true' # this is the default, but being explicit - dont start job if one with the same inputs has already run
-                paths_filter: |
-                    frontend:
-                        paths:
-                            - 'frontend/**'
-                    backend:
-                        paths:
-                            - 'backend/**'
-
-
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      paths_result: ${{ steps.skip_check.outputs.paths_result }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: 'true'
+          skip_after_successful_duplicate: 'true' # this is the default, but being explicit - dont start job if one with the same inputs has already run
+          paths_filter: |
+            frontend:
+                paths:
+                    - 'frontend/**'
+            backend:
+                paths:
+                    - 'backend/**'
 
   frontend:
     name: Frontend Checks
@@ -50,5 +48,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Check migrations
-        run docker compose run backend python manage.py makemigrations --check
-
+        run: docker compose run backend python manage.py makemigrations --check
