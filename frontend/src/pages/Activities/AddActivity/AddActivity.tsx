@@ -100,13 +100,15 @@ const AddActivity = ({}: AddActivityProps) => {
         ) {
             setNewActivity(a => ({ ...a, itemDetails: { ...a.itemDetails, info: item.info } }))
         }
+    }, [item, newActivity])
+    useEffect(() => {
         if (item && item.parent_token) {
             setNewActivity(a => ({
                 ...a,
                 itemDetails: { ...a.itemDetails, parent_token: item.parent_token },
             }))
         }
-    }, [item, newActivity])
+    }, [item])
 
     const [popoverOpen, setPopoverOpen] = useState(false)
 
