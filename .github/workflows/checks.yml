@@ -24,7 +24,7 @@ jobs:
   frontend:
     name: Frontend Checks
     needs: pre_job
-    if: needs.pre_job.outputs.should_skip != 'true' || !fromJSON(needs.pre_job.paths_result).frontend.should_skip
+    if: fromJSON(needs.pre_job.paths_result).frontend.should_skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
