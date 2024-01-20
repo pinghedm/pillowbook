@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 import traceback
+import os
 
 
 class AppConfig(AppConfig):
@@ -12,6 +13,7 @@ class AppConfig(AppConfig):
 
             ItemType.update_defaults()
         except:
-            traceback.print_exc()
+            if not os.environ.get("CI"):
+                traceback.print_exc()
             ## this will get upset if there is a migration pending - thats fine
             pass
