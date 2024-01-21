@@ -1,12 +1,13 @@
 import { Button, FloatButton, Layout, List, Spin, Typography } from 'antd'
 import { useItems } from 'services/item_service'
 import React from 'react'
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 
 import { Activity, useActivities, useUpdateActivity } from 'services/activities_service'
 import { usePagedResultData } from 'services/utils'
 import { DateTime } from 'luxon'
 import { useUserSettings } from 'services/user_service'
+import ListItem from 'components/ListItem'
 
 const HomePageRecentItems = () => {
     const {
@@ -15,6 +16,9 @@ const HomePageRecentItems = () => {
         fetchStatus: recentsStatus,
     } = useItems(1, 5, undefined, undefined, { key: 'created', order: 'descend' })
     const { data: recents } = usePagedResultData(recentsPagedResult)
+    const navigate = useNavigate()
+
+    
 
     return (
         <>
@@ -25,15 +29,23 @@ const HomePageRecentItems = () => {
                 size="small"
                 dataSource={recents}
                 renderItem={(item, index) => (
-                    <List.Item>
-                        <List.Item.Meta title={item.name} />
-                        <Button
+                    <ListItem 
+                        item={item} 
+                        path={`/items/${item.token}`} 
+                        actions = {[<Button
                             type="primary"
-                            href={`/activities/${item.item_type}/${item.token}`}
+                            onClick={e => {
+                                e.preventDefault()
+                                navigate(`/activities/${item.item_type}/${item.token}`)}}
                         >
                             Log Activity
-                        </Button>
-                    </List.Item>
+                        </Button>]} />
+                    // <Link to={{ pathname: `/items/${item.token}` }}>
+                    //     <List.Item>
+                    //         <List.Item.Meta title={item.name} />
+                    //         
+                    //     </List.Item>
+                    // </Link>
                 )}
             />
         </>
