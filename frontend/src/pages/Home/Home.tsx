@@ -1,13 +1,13 @@
-import { Button, FloatButton, Layout, List, Spin, Typography } from 'antd'
+import { Button, List, Spin, Typography } from 'antd'
 import { useItems } from 'services/item_service'
 import React from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
-import { Activity, useActivities, useUpdateActivity } from 'services/activities_service'
+import { useActivities, useUpdateActivity } from 'services/activities_service'
 import { usePagedResultData } from 'services/utils'
 import { DateTime } from 'luxon'
 import { useUserSettings } from 'services/user_service'
-import ListItem from 'components/ListItem'
+import { ActivityListItem, ItemListItem } from 'components/styled_list_items'
 
 const HomePageRecentItems = () => {
     const {
@@ -29,7 +29,7 @@ const HomePageRecentItems = () => {
                 size="small"
                 dataSource={recents}
                 renderItem={(item, index) => (
-                    <ListItem 
+                    <ItemListItem 
                         item={item} 
                         path={`/items/${item.token}`} 
                         actions = {[<Button
@@ -40,12 +40,6 @@ const HomePageRecentItems = () => {
                         >
                             Log Activity
                         </Button>]} />
-                    // <Link to={{ pathname: `/items/${item.token}` }}>
-                    //     <List.Item>
-                    //         <List.Item.Meta title={item.name} />
-                    //         
-                    //     </List.Item>
-                    // </Link>
                 )}
             />
         </>
@@ -69,11 +63,14 @@ const HomePagePendingActivities = () => {
                 dataSource={upcoming}
                 locale={{ emptyText: 'No Data' }}
                 renderItem={(item, index) => (
-                    <List.Item>
-                        <List.Item.Meta title={item.item_name} />
-                        <Button
+                    <ActivityListItem 
+                        item={item}
+                        path={`/activities/${item.item_type}/${item.token}`}
+                        actions={[
+                            <Button
                             type="primary"
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.preventDefault()
                                 activityUpdateMutation.mutate({
                                     token: item.token,
                                     patch: { pending: false },
@@ -82,7 +79,7 @@ const HomePagePendingActivities = () => {
                         >
                             Remove Pending
                         </Button>
-                    </List.Item>
+                    ]} />
                 )}
             />
         </>
@@ -108,11 +105,14 @@ const HomePageInProgressActivities = () => {
                 dataSource={unfinished}
                 locale={{ emptyText: 'No Data' }}
                 renderItem={(item, index) => (
-                    <List.Item>
-                        <List.Item.Meta title={item.item_name} />
-                        <Button
+                    <ActivityListItem 
+                        item={item}
+                        path={`/activities/${item.item_type}/${item.token}`}
+                        actions={[
+                            <Button
                             type="primary"
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.preventDefault()
                                 activityUpdateMutation.mutate({
                                     token: item.token,
                                     patch: { end_time: DateTime.now().toISO() },
@@ -121,7 +121,7 @@ const HomePageInProgressActivities = () => {
                         >
                             Set End Time
                         </Button>
-                    </List.Item>
+                    ]} />
                 )}
             />
         </>
@@ -135,6 +135,7 @@ const HomePagePinnedItems = () => {
         fetchStatus,
     } = useItems(1, 5, undefined, { pinned: ['true'] }, { key: 'created', order: 'descend' })
     const { data: pinnedItems } = usePagedResultData(pinnedPagedResult)
+    const navigate = useNavigate()
 
     return (
         <>
@@ -145,15 +146,17 @@ const HomePagePinnedItems = () => {
                 size="small"
                 dataSource={pinnedItems}
                 renderItem={(item, index) => (
-                    <List.Item>
-                        <List.Item.Meta title={item.name} />
-                        <Button
+                    <ItemListItem 
+                        item={item} 
+                        path={`/items/${item.token}`} 
+                        actions = {[<Button
                             type="primary"
-                            href={`/activities/${item.item_type}/${item.token}`}
+                            onClick={e => {
+                                e.preventDefault()
+                                navigate(`/activities/${item.item_type}/${item.token}`)}}
                         >
                             Log Activity
-                        </Button>
-                    </List.Item>
+                        </Button>]} />
                 )}
             />
         </>
