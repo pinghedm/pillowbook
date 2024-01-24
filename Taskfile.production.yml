@@ -1,0 +1,47 @@
+version: '3'
+
+# prefix any of these commands with DOCKER_HOST='connection string for remote host' if you'd like!
+tasks:
+  pip-compile:
+    desc: create requirements.txt from requirements.in
+    cmds:
+      - docker compose -f docker-compose.production.yml run --build backend pip-compile
+      - docker compose -f docker-compose.production.yml run --build backend pip-compile requirements-dev.in
+    sources:
+      - backend/requirements.in
+      - backend/requirements-dev.in
+    generates:
+      - backend/requirements.txt
+      - backend/requirements-dev.txt
+
+  build_fe:
+    cmds:
+      - docker compose -f docker-compose.production.yml run --build frontend
+
+  gunicorn:
+    dotenv: ['backend/.env.prod']
+    desc: run backend daemon
+    cmds:
+      - docker compose -f docker-compose.production.yml run --build backend python manage.py collectstatic --no-input
+      - docker compose -f docker-compose.production.yml up --no-deps --build -d backend
+    deps: [pip-compile]
+
+  shell:
+    desc: open a shell
+    cmds:
+      - docker compose -f docker-compose.production.yml run --build backend sh
+    deps: [pip-compile]
+  caddy:
+    desc: run caddy
+    cmds:
+      - task: build_fe
+      - docker compose -f docker-compose.production.yml up --build -d caddy
+  redeploy:
+    desc: redeploy!
+    cmds:
+      - task: gunicorn
+      - task: caddy
+  down:
+    desc: take everyone down
+    cmds:
+      - docker compose -f docker-compose.production.yml down

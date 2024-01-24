@@ -58,11 +58,12 @@ const WrappedQueryClientProvider = ({ children }: { children: ReactNode }) => {
 }
 
 const App = () => {
-    axios.defaults.baseURL = import.meta.env.VITE_API_URL_BASE
+    const baseUrl = import.meta.env.VITE_API_URL_BASE || ''
+    axios.defaults.baseURL = baseUrl
+    axios.defaults.withXSRFToken = baseUrl ? true : undefined // if the api base url is set (e.g on local, where the ports are different)
     axios.defaults.withCredentials = true
     axios.defaults.xsrfCookieName = 'csrftoken'
     axios.defaults.xsrfHeaderName = 'X-CSRFToken'
-    axios.defaults.withXSRFToken = axios.defaults.baseURL ? true : undefined // if the api base url is set (e.g on local, where the ports are different)
 
     return (
         <WrappedQueryClientProvider>

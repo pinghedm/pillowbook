@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  backend:
+    extends:
+      file: ./docker-compose.base.yml
+      service: backend
+    build:
+      target: prod
+    stdin_open: false
+    volumes:
+      - media_root_prod:/app/media
+      - staticfiles:/app/staticfiles
+      - /var/log/pillowbook/guni_access.log:/app/guni_access.log
+      - /var/log/pillowbook/guni_error.log:/app/guni_error.log
+    env_file:
+      - ./.env.prod
+    environment:
+      DEBUG: false
+    restart: unless-stopped
+    entrypoint: scripts/entrypoint.sh
+    command: sh -c 'python manage.py migrate && gunicorn -b "0.0.0.0:8000" --workers=3 --preload --access-logfile guni_access.log --error-logfile guni_error.log backend.wsgi'
+
+  db:
+    extends:
+      file: ./docker-compose.yml
+      service: db
+    volumes:
+      - db-data_prod:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db-data_prod:
+  media_root_prod:
+  staticfiles:

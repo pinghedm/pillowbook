@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+    frontend:
+        extends:
+            file: docker-compose.base.yml
+            service: frontend
+        build:
+            target: prod
+        environment:
+            NODE_ENV: production
+        command: npm run build
+        volumes:
+            - dist:/app/dist
+            - /app/node_modules/
+    volumes:
+        dist:

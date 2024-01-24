@@ -11,3 +11,4 @@ DB_PORT = os.environ.get("DB_PORT", "5432")
 
 SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "True") == "True"
 WEB_HOST = os.environ.get("WEB_HOST", "http://localhost:8000")
+STATIC_URL = os.environ.get("STATIC_URL", "/static/")
