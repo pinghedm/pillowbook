@@ -34,9 +34,8 @@ const HomePageRecentItems = () => {
                         path={`/items/${item.token}`} 
                         actions = {[<Button
                             type="primary"
-                            onClick={e => {
-                                e.preventDefault()
-                                navigate(`/activities/${item.item_type}/${item.token}`)}}
+                            href={`/activities/${item.item_type}/${item.token}`}
+                            onClick={e => {e.stopPropagation()}}
                         >
                             Log Activity
                         </Button>]} />
@@ -151,9 +150,8 @@ const HomePagePinnedItems = () => {
                         path={`/items/${item.token}`} 
                         actions = {[<Button
                             type="primary"
-                            onClick={e => {
-                                e.preventDefault()
-                                navigate(`/activities/${item.item_type}/${item.token}`)}}
+                            href={`/activities/${item.item_type}/${item.token}`}
+                            onClick={e => { e.stopPropagation() }}
                         >
                             Log Activity
                         </Button>]} />
