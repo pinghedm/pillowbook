@@ -1,7 +1,5 @@
 name: Checks
-on:
-  pull_request:
-  push:
+on: [push, pull_request]
 
 jobs:
   pre_job:
@@ -20,9 +18,11 @@ jobs:
             frontend:
                 paths:
                     - 'frontend/**'
+                    - '.github/**'
             backend:
                 paths:
                     - 'backend/**'
+                    - '.github/**'
 
   frontend:
     name: Frontend Checks
