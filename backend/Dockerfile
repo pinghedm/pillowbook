@@ -1,4 +1,4 @@
-FROM python:3.12-alpine
+FROM python:3.12-alpine as BASE
     ENV PYTHONDONTWRITEBYTECODE=1
     ENV PYTHONUNBUFFERED=1
 
@@ -18,12 +18,24 @@ FROM python:3.12-alpine
 
     RUN apk --purge del .build-deps
 
-    COPY backend .
-    COPY scripts .
-
     RUN chown user /app
+
+    COPY backend .
+    COPY scripts scripts/
+
     RUN mkdir /app/media
     RUN chown user /app/media
+
+
     USER user
 
+FROM base as dev
+    ENTRYPOINT 'scripts/entrypoint.sh'
+
+FROM base as prod
+    COPY manage.py .
+    COPY app app
+    COPY backend backend
+    RUN mkdir /app/staticfiles
+    RUN chown user /app/staticfiles
     ENTRYPOINT 'scripts/entrypoint.sh'

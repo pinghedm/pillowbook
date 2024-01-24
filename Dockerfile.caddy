@@ -1,0 +1,2 @@
+FROM caddy:2.7.6-alpine
+COPY prod.caddy /etc/caddy/Caddyfile

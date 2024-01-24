@@ -3,6 +3,7 @@ on: [push, pull_request]
 
 jobs:
   pre_job:
+    continue-on-error: true
     runs-on: ubuntu-latest
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
@@ -17,14 +18,16 @@ jobs:
             frontend:
                 paths:
                     - 'frontend/**'
+                    - '.github/**'
             backend:
                 paths:
                     - 'backend/**'
+                    - '.github/**'
 
   frontend:
     name: Frontend Checks
     needs: pre_job
-    if: fromJSON(needs.pre_job.paths_result).frontend.should_skip != 'true'
+    if: needs.pre_job.outputs.should_skip != 'true' || fromJSON(needs.pre_job.paths_result).frontend.should_skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -38,7 +41,7 @@ jobs:
   backend:
     name: Backend Checks
     needs: pre_job
-    if: fromJSON(needs.pre_job.paths_result).backend.should_skip != 'true'
+    if: needs.pre_job.outputs.should_skip != 'true' || fromJSON(needs.pre_job.paths_result).backend.should_skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:

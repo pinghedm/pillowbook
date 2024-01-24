@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: db
+      POSTGES_USER: postgres
+      POSTGRES_PASSWORD: goodpassword
+      POSTGRES_HOST: db
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+
+    depends_on:
+      - db
+
+volumes:
+  db-data:
