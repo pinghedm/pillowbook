@@ -123,40 +123,48 @@ const LoggedInRoot = () => {
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: '30px',
                     width: '100%',
                     padding: '0 15px',
+                    justifyContent: 'space-between',
                 }}
             >
                 <div
                     style={{
-                        color: 'white',
                         display: 'flex',
                         flexDirection: 'row',
-                        gap: '2px',
                         alignItems: 'center',
-                        minWidth: '32px',
                     }}
                 >
-                    P<BookOutlined />
+                    <div
+                        style={{
+                            color: 'white',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: '2px',
+                            alignItems: 'center',
+                            minWidth: '32px',
+                        }}
+                    >
+                        P<BookOutlined />
+                    </div>
+                    <Menu
+                        theme="dark"
+                        mode="horizontal"
+                        style={{ flex: '1', maxWidth: 'calc(100vw - 60px - 60px)' }}
+                        items={[
+                            {
+                                key: 'home',
+                                label: 'Home',
+                            },
+                            { key: 'items', label: 'Items' },
+                            { key: 'activities', label: 'Activities' },
+                        ]}
+                        onClick={({ key }) => {
+                            navigate({ pathname: key })
+                        }}
+                        defaultSelectedKeys={[selectedKey]}
+                    />
                 </div>
-                <Menu
-                    theme="dark"
-                    mode="horizontal"
-                    style={{ flex: '1', maxWidth: 'calc(100vw - 60px - 60px)' }}
-                    items={[
-                        {
-                            key: 'home',
-                            label: 'Home',
-                        },
-                        { key: 'items', label: 'Items' },
-                        { key: 'activities', label: 'Activities' },
-                    ]}
-                    onClick={({ key }) => {
-                        navigate({ pathname: key })
-                    }}
-                    defaultSelectedKeys={[selectedKey]}
-                />
                 <Menu
                     expandIcon={<DownOutlined />}
                     theme="dark"
