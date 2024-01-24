@@ -1,5 +1,7 @@
 name: Checks
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
 
 jobs:
   pre_job:
