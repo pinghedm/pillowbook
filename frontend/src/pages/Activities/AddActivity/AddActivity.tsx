@@ -37,6 +37,8 @@ const AddActivity = ({}: AddActivityProps) => {
 
     const createActivityMutation = useCreateActivity()
 
+    const [defaultsSet, setDefaultsSet] = useState(new Set<string>())
+
     const [newActivity, setNewActivity] = useState<CreateActivityType>({
         itemDetails: {
             info: {},
@@ -55,7 +57,8 @@ const AddActivity = ({}: AddActivityProps) => {
     useEffect(() => {
         if (
             userSettings?.activityDefaults?.defaultEndToNow &&
-            !newActivity.activityDetails.end_time
+            !newActivity.activityDetails.end_time &&
+            !defaultsSet.has('endTime')
         ) {
             setNewActivity(a => ({
                 ...a,
@@ -64,10 +67,15 @@ const AddActivity = ({}: AddActivityProps) => {
                     end_time: DateTime.fromJSDate(new Date()).toISO() || undefined,
                 },
             }))
+            setDefaultsSet(s => {
+                s.add('endTime')
+                return s
+            })
         }
         if (
             userSettings?.activityDefaults?.defaultStartToNow &&
-            !newActivity.activityDetails.start_time
+            !newActivity.activityDetails.start_time &&
+            !defaultsSet.has('startTime')
         ) {
             setNewActivity(a => ({
                 ...a,
@@ -76,21 +84,33 @@ const AddActivity = ({}: AddActivityProps) => {
                     start_time: DateTime.fromJSDate(new Date()).toISO() || undefined,
                 },
             }))
+            setDefaultsSet(s => {
+                s.add('startTime')
+                return s
+            })
         }
 
-        if (userSettings?.activityDefaults?.defaultPending) {
+        if (userSettings?.activityDefaults?.defaultPending && !defaultsSet.has('pending')) {
             setNewActivity(a => ({
                 ...a,
                 activityDetails: { ...a.activityDetails, pending: true },
             }))
+            setDefaultsSet(s => {
+                s.add('pending')
+                return s
+            })
         }
-        if (userSettings?.activityDefaults?.defaultFinished) {
+        if (userSettings?.activityDefaults?.defaultFinished && !defaultsSet.has('finished')) {
             setNewActivity(a => ({
                 ...a,
                 activityDetails: { ...a.activityDetails, finished: true },
             }))
+            setDefaultsSet(s => {
+                s.add('finished')
+                return s
+            })
         }
-    }, [userSettings, newActivity])
+    }, [userSettings, newActivity, defaultsSet])
 
     useEffect(() => {
         if (
