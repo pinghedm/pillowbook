@@ -4,30 +4,30 @@ on:
   push:
 
 jobs:
-  # pre_job:
-  #   continue-on-error: true
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     should_skip: ${{ steps.skip_check.outputs.should_skip }}
-  #     paths_result: ${{ steps.skip_check.outputs.paths_result }}
-  #   steps:
-  #     - id: skip_check
-  #       uses: fkirc/skip-duplicate-actions@master
-  #       with:
-  #         cancel_others: 'true'
-  #         skip_after_successful_duplicate: 'true' # this is the default, but being explicit - dont start job if one with the same inputs has already run
-  #         paths_filter: |
-  #           frontend:
-  #               paths:
-  #                   - 'frontend/**'
-  #           backend:
-  #               paths:
-  #                   - 'backend/**'
+  pre_job:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      paths_result: ${{ steps.skip_check.outputs.paths_result }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: 'true'
+          skip_after_successful_duplicate: 'true' # this is the default, but being explicit - dont start job if one with the same inputs has already run
+          paths_filter: |
+            frontend:
+                paths:
+                    - 'frontend/**'
+            backend:
+                paths:
+                    - 'backend/**'
 
   frontend:
     name: Frontend Checks
-    # needs: pre_job
-    # if: fromJSON(needs.pre_job.paths_result).frontend.should_skip != 'true'
+    needs: pre_job
+    if: needs.pre_job.outputs.should_skip != 'true' || fromJSON(needs.pre_job.paths_result).frontend.should_skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -40,8 +40,8 @@ jobs:
         run: docker compose run frontend ./node_modules/typescript/bin/tsc --noEmit
   backend:
     name: Backend Checks
-    # needs: pre_job
-    # if: fromJSON(needs.pre_job.paths_result).backend.should_skip != 'true'
+    needs: pre_job
+    if: needs.pre_job.outputs.should_skip != 'true' || fromJSON(needs.pre_job.paths_result).backend.should_skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
