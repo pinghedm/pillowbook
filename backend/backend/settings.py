@@ -29,7 +29,7 @@ SECRET_KEY = env.SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.DEBUG
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"] + [env.WEB_HOST]
 
 
 # Application definition
@@ -137,7 +137,9 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8100"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8100"] + [
+    env.WEB_HOST if env.WEB_HOST.startswith("http") else f"https://{env.WEB_HOST}"
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS: list[str] = list(default_headers) + ["x-csrftoken"]
 
@@ -157,9 +159,9 @@ CSRF_COOKIE_SECURE = env.SESSION_COOKIE_SECURE
 CSRF_COOKIE_HTTPONLY = False  # this is the default, but setting it explicitly because our frontend _must_ be able to read this cookie, currently
 CSRF_COOKIE_NAME = "csrftoken"
 
-# see https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-CSRF_COOKIE_HTTPONLY
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"] + [
+    env.WEB_HOST if env.WEB_HOST.startswith("http") else f"https://{env.WEB_HOST}"
+]
 
 
 MEDIA_ROOT = "/app/media"

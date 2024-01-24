@@ -5,3 +5,4 @@ backend/pyrightconfig.json
 .idea/
 backend/.env.prod
 backend/staticfiles
+.caddy.env

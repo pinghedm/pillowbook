@@ -201,7 +201,7 @@ class ActivityList(generics.ListCreateAPIView):
     filterset_class = ActivityFilterSet
 
     def get_queryset(self):
-        return Activity.objects.filter(user=self.request.user)
+        return Activity.objects.filter(user=self.request.user).order_by("-pk")
 
     def create(self, request, *args, **kwargs):
         incoming = request.data

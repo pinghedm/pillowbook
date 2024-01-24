@@ -17,23 +17,26 @@ services:
       service: frontend
 
   caddy:
-    image: caddy:2.7.6-alpine
-    restart: unless-stopped
+    env_file:
+      - .caddy.env
+    build:
+      dockerfile: ./Dockerfile.caddy
+      context: .
+
     cap_add:
       - NET_ADMIN
     ports:
       - 8100:8100
     volumes:
       - staticfiles:/srv/staticfiles:ro
-      - dist:/srv/dist
+      - dist:/srv/dist:ro
       - caddy_data:/data
-      - ./prod.caddy:/etc/caddy/Caddyfile
+      - /var/log/pillowbook/caddy.log:/caddy.log
 
 volumes:
   db-data_prod:
   media_root_prod:
-  app:
   caddy_data:
   staticfiles:
   dist:
-  app_backed_prod:
+  # app_backend_prod:

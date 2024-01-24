@@ -1,6 +1,6 @@
 version: '3'
 
-# pass argument to allow remote docker daemon with -H ssh://[host]
+# prefix any of these commands with DOCKER_HOST='connection string for remote host' if you'd like!
 tasks:
   pip-compile:
     desc: create requirements.txt from requirements.in
@@ -14,27 +14,34 @@ tasks:
       - backend/requirements.txt
       - backend/requirements-dev.txt
 
-  shell:
-    dotenv: ['backend/.env.prod']
-    desc: open a shell
+  build_fe:
     cmds:
-      - docker compose -f docker-compose.production.yml run -e SECRET_KEY=${SECRET_KEY} --build backend sh
-    deps: [pip-compile]
+      - docker compose -f docker-compose.production.yml run --build frontend
 
   gunicorn:
     dotenv: ['backend/.env.prod']
-    desc: run daemon
+    desc: run backend daemon
     cmds:
       - docker compose -f docker-compose.production.yml run --build backend python manage.py collectstatic --no-input
-      - docker compose -f docker-compose.production.yml up --build backend
+      - docker compose -f docker-compose.production.yml up --no-deps --build -d backend
     deps: [pip-compile]
 
-  build_fe:
+  shell:
+    desc: open a shell
     cmds:
-      - docker compose -f docker-compose.production.yml run --build frontend npm run build
-
+      - docker compose -f docker-compose.production.yml run --build backend sh
+    deps: [pip-compile]
   caddy:
+    desc: run caddy
     cmds:
       - task: build_fe
-      - docker compose -f docker-compose.production.yml up --build caddy
-    deps: [gunicorn]
+      - docker compose -f docker-compose.production.yml up --build -d caddy
+  redeploy:
+    desc: redeploy!
+    cmds:
+      - task: gunicorn
+      - task: caddy
+  down:
+    desc: take everyone down
+    cmds:
+      - docker compose -f docker-compose.production.yml down

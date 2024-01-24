@@ -3,19 +3,15 @@ version: '3.9'
 services:
     frontend:
         extends:
-            file: docker-compose.yml
+            file: docker-compose.base.yml
             service: frontend
         build:
-            context: .
-            dockerfile: ./Dockerfile
+            target: prod
         environment:
             NODE_ENV: production
-            VITE_API_URL_BASE: http://localhost:8000
         command: npm run build
         volumes:
             - dist:/app/dist
             - /app/node_modules/
-        ports:
-            - 3000:3000
     volumes:
         dist:
