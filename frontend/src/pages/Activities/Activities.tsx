@@ -9,9 +9,10 @@ import {
 } from 'services/activities_service'
 import { DateTime } from 'luxon'
 import { capitalizeWords, usePagedResultData } from 'services/utils'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useUserSettings } from 'services/user_service'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ActivityListItem } from 'components/styled_list_items'
 
 const PAGE_SIZE = 20
 export interface ActivitiesProps {}
@@ -211,85 +212,23 @@ const Activities = ({}: ActivitiesProps) => {
                 loading={isPending && fetchStatus !== 'idle'}
                 dataSource={activities}
                 renderItem={(item, index) => (
-                    <Link to={{ pathname: `${item.item_type}/${item.token}` }}>
-                        <List.Item
-                            extra={
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        gap: '5px',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    {item.rating
-                                        ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
-                                        : '-'}{' '}
-                                    <StarFilled />
-                                </div>
-                            }
-                            style={{ cursor: 'pointer' }}
+                    <ActivityListItem
+                        path={`${item.item_type}/${item.token}`}
+                        item={item}
+                        extras={[<div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: '5px',
+                                alignItems: 'center',
+                            }}
                         >
-                            <List.Item.Meta
-                                title={<div>{item.item_name}</div>}
-                                avatar={
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                        }}
-                                    >
-                                        {item.icon_url ? (
-                                            <img
-                                                style={{ height: '50px', width: '50px' }}
-                                                src={item.icon_url}
-                                            />
-                                        ) : (
-                                            <QuestionCircleOutlined />
-                                        )}
-                                        {capitalizeWords(item.item_type)}
-                                    </div>
-                                }
-                                description={
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            gap: '5px',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        {item.finished ? (
-                                            <Typography.Text
-                                                type="success"
-                                                style={{
-                                                    borderRight: '1px solid lightgray',
-                                                    paddingRight: '5px',
-                                                }}
-                                            >
-                                                Completed
-                                            </Typography.Text>
-                                        ) : (
-                                            ''
-                                        )}
-                                        {item.start_time
-                                            ? DateTime.fromISO(item.start_time).toLocaleString(
-                                                  DateTime.DATETIME_SHORT,
-                                              )
-                                            : '[No Start Time]'}{' '}
-                                        -
-                                        {item.end_time
-                                            ? DateTime.fromISO(item.end_time).toLocaleString(
-                                                  DateTime.DATETIME_SHORT,
-                                              )
-                                            : '[No End Time]'}
-                                    </div>
-                                }
-                            />
-                        </List.Item>
-                    </Link>
+                            {item.rating
+                                ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
+                                : '-'}{' '}
+                            <StarFilled />
+                        </div>]}
+                        />
                 )}
             />
         </div>

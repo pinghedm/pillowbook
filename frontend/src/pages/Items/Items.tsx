@@ -1,16 +1,13 @@
 import {
-    PlusOutlined,
     PushpinFilled,
     PushpinOutlined,
-    QuestionCircleOutlined,
-    QuestionOutlined,
     SearchOutlined,
     StarFilled,
 } from '@ant-design/icons'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Cascader, Input, List } from 'antd'
+import { ItemListItem } from 'components/styled_list_items'
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import {
     ItemFilterInfo,
     ItemFilterInfoFilters,
@@ -18,9 +15,8 @@ import {
     useItems,
     useUpdateItem,
 } from 'services/item_service'
-import { useItemTypes } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
-import { capitalizeWords, usePagedResultData } from 'services/utils'
+import { usePagedResultData } from 'services/utils'
 
 export interface ItemsProps {}
 
@@ -166,62 +162,36 @@ const Items = ({}: ItemsProps) => {
                 }}
                 dataSource={items}
                 renderItem={(item, index) => (
-                    <Link to={{ pathname: item.token }}>
-                        <List.Item
-                            actions={[
-                                <Button
-                                    icon={item.pinned ? <PushpinFilled /> : <PushpinOutlined />}
-                                    onClick={e => {
-                                        e.preventDefault()
-                                        updateItemMutation.mutate({
-                                            token: item.token,
-                                            patch: { pinned: !item.pinned },
-                                        })
-                                    }}
-                                />,
-                            ]}
-                            extra={
-                                <div
-                                    style={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        gap: '5px',
-                                        alignItems: 'center',
-                                    }}
-                                >
-                                    {item.rating
-                                        ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
-                                        : '-'}{' '}
-                                    <StarFilled />
-                                </div>
-                            }
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <List.Item.Meta
-                                title={<div>{item.name}</div>}
-                                avatar={
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                        }}
-                                    >
-                                        {item.icon_url ? (
-                                            <img
-                                                style={{ height: '50px', width: '50px' }}
-                                                src={item.icon_url}
-                                            />
-                                        ) : (
-                                            <QuestionOutlined />
-                                        )}
-                                        {capitalizeWords(item.item_type)}
-                                    </div>
-                                }
-                            />
-                        </List.Item>
-                    </Link>
+                    <ItemListItem 
+                        path={`${item.token}`}
+                        item={item}
+                        actions={[
+                            <Button
+                                icon={item.pinned ? <PushpinFilled /> : <PushpinOutlined />}
+                                onClick={e => {
+                                    e.preventDefault()
+                                    updateItemMutation.mutate({
+                                        token: item.token,
+                                        patch: { pinned: !item.pinned },
+                                    })
+                                }}
+                            />,
+                        ]}
+                        extras={[
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    gap: '5px',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                {item.rating
+                                    ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
+                                    : '-'}{' '}
+                                <StarFilled />
+                            </div>
+                        ]}/>
                 )}
             />
         </div>
