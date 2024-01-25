@@ -633,7 +633,7 @@ const EditItemTypeModal = ({
                         type="primary"
                         onClick={() => {
                             setNewField({
-                                required: false,
+                                required: true,
                                 title: '',
                                 type: 'string',
                             })
