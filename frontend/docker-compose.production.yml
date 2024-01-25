@@ -13,5 +13,5 @@ services:
         volumes:
             - dist:/app/dist
             - /app/node_modules/
-    volumes:
-        dist:
+volumes:
+    dist:
