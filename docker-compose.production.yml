@@ -29,6 +29,7 @@ services:
       - 8100:8100
     volumes:
       - staticfiles:/srv/staticfiles:ro
+      - media_root_prod:/srv/media:ro
       - dist:/srv/dist:ro
       - caddy_data:/data
       - /var/log/pillowbook/caddy.log:/caddy.log

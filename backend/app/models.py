@@ -83,7 +83,7 @@ class ItemType(TimeStampedModel):
 
     @property
     def icon_url(self):
-        return f"{WEB_HOST}{self.icon.url}" if self.icon else ""
+        return f"{WEB_HOST if WEB_HOST.startswith("http") else f"https://{WEB_HOST}"}{self.icon.url}" if self.icon else ""
 
     def __str__(self) -> str:
         return self.slug

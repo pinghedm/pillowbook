@@ -8,6 +8,11 @@
 			root staticfiles
 		}
 	}
+	handle_path /media/* {
+		file_server * {
+			root media
+		}
+	}
 	handle /admin/* {
 		reverse_proxy backend:8000
 	}

@@ -207,7 +207,7 @@ const EditItemTypeModal = ({
     }>() // kind of a messy thing here - this type is a dict of any number of properties, but i only want to allow one, but i cant figure out how to index into this type
 
     const iconUploadURL = useMemo(() => {
-        const baseURL = import.meta.env.VITE_API_URL_BASE
+        const baseURL = import.meta.env.VITE_API_URL_BASE || ''
         return baseURL + '/api/item_type/' + itemSlug + '/icon'
     }, [itemSlug])
 
