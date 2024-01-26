@@ -149,7 +149,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                                     format: userSettings?.use24HrTime ? 'HH:mm' : 'hh:mm a',
                                     use12Hours: !(userSettings?.use24HrTime ?? true),
                                 }}
-                                format={userSettings?.use24HrTime ? 'MM-DD-yyyy HH:mm' : 'MM-DD-yyyy hh:mm a' }
+                                format={userSettings?.use24HrTime ? 'MM/dd/yyyy HH:mm' : 'MM/dd/yyyy hh:mm a' }
                                 allowEmpty={[true, true]}
                                 defaultValue={[
                                     activity.start_time
