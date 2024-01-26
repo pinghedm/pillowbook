@@ -141,8 +141,8 @@ export const useUpdateItem = () => {
     return mutation
 }
 
-interface CreateItemType {
-    info: Record<string, string>
+export interface CreateItemType {
+    info: Record<string, any>
     item_type: string
     setAsParentTo?: string // token of item
 }
