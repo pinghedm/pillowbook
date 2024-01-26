@@ -56,7 +56,7 @@ class ItemTypeList(generics.ListCreateAPIView):
         name = request.POST.get("name")
         if not name:
             return Response("", status=status.HTTP_400_BAD_REQUEST)
-        parent_slug = request.POST.get("parent_slug", None)
+        parent_slug = request.POST.get("parentSlug", None)
         icon = request.FILES.get("icon")
 
         new_item_type = ItemType(

@@ -155,6 +155,7 @@ const NewItemTypeModal = ({
                                 {
                                     onSuccess: itemType => {
                                         setName(undefined)
+                                        setParentSlug(undefined)
                                         openEdit(itemType.slug)
                                     },
                                 },
@@ -295,7 +296,9 @@ const EditItemTypeModal = ({
                     style={{ width: '300px' }}
                     popupMatchSelectWidth={false}
                     value={parentSlug}
-                    options={(itemTypes ?? []).map(it => ({ value: it.slug, label: it.slug }))}
+                    options={(itemTypes ?? [])
+                        .filter(it => it.slug !== itemType.slug)
+                        .map(it => ({ value: it.slug, label: it.name }))}
                     onChange={val => {
                         setParentSlug(val)
 
