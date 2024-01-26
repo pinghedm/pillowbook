@@ -219,7 +219,7 @@ const AddActivity = ({}: AddActivityProps) => {
                                     />
                                 ) : fieldData.type === 'number' ? (
                                     <InputNumber
-                                        precision={2}
+                                        precision={0}
                                         value={newActivity.itemDetails.info?.[fieldName] || ''}
                                         onChange={val => {
                                             setNewActivity(a => ({

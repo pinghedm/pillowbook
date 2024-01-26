@@ -56,7 +56,7 @@ const AddItem = ({ itemTypeSlug, setAsParentTo, onFinishCreated }: AddItemProps)
                                 options={autocompleteChoices?.[fieldName]}
                             />
                         ) : fieldData.type === 'number' ? (
-                            <InputNumber />
+                            <InputNumber precision={0} />
                         ) : (
                             <div>UnsupportedType</div>
                         )}

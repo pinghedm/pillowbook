@@ -70,6 +70,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                                     />
                                 ) : fieldData.type === 'number' ? (
                                     <InputNumber
+                                        precision={0}
                                         disabled
                                         value={item?.info?.[fieldName]}
                                     />
