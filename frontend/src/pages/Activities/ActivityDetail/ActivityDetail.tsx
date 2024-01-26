@@ -146,11 +146,18 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                         <div>
                             <DatePicker.RangePicker
                                 showTime={{
-                                    format: 'HH:mm',
+                                    format: userSettings?.use24HrTime ? 'HH:mm' : 'hh:mm a',
                                     use12Hours: !(userSettings?.use24HrTime ?? true),
                                 }}
+                                format={userSettings?.use24HrTime ? 'MM-DD-yyyy HH:mm' : 'MM-DD-yyyy hh:mm a' }
                                 allowEmpty={[true, true]}
                                 defaultValue={[
+                                    activity.start_time
+                                        ? DateTime.fromISO(activity.start_time)
+                                        : null,
+                                    activity.end_time ? DateTime.fromISO(activity.end_time) : null,
+                                ]}
+                                value={[
                                     activity.start_time
                                         ? DateTime.fromISO(activity.start_time)
                                         : null,
