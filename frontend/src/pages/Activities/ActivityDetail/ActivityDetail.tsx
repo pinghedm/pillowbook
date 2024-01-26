@@ -70,6 +70,7 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                                     />
                                 ) : fieldData.type === 'number' ? (
                                     <InputNumber
+                                        precision={0}
                                         disabled
                                         value={item?.info?.[fieldName]}
                                     />
@@ -144,7 +145,10 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <div>
                             <DatePicker.RangePicker
-                                showTime
+                                showTime={{
+                                    format: 'HH:mm',
+                                    use12Hours: !(userSettings?.use24HrTime ?? true),
+                                }}
                                 allowEmpty={[true, true]}
                                 defaultValue={[
                                     activity.start_time

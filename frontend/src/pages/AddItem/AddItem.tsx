@@ -1,6 +1,7 @@
-import { AutoComplete, Button, Form, Input, InputNumber, Spin } from 'antd'
-import React from 'react'
-import { useCreateItem, Item } from 'services/item_service'
+import { AutoComplete, Button, Form, Input, InputNumber, Spin, Typography } from 'antd'
+import { FormWrap, LabeledFormRow } from 'components/FormWrappers'
+import React, { useState } from 'react'
+import { useCreateItem, Item, CreateItemType } from 'services/item_service'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
 
@@ -15,64 +16,83 @@ const AddItem = ({ itemTypeSlug, setAsParentTo, onFinishCreated }: AddItemProps)
     const { data: userSettings } = useUserSettings()
     const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType?.slug ?? '')
     const createItemMutation = useCreateItem()
+
+    const [newItem, setNewItem] = useState<CreateItemType>({
+        item_type: itemTypeSlug,
+        info: {},
+        setAsParentTo,
+    })
     if (!itemType) {
         return <Spin />
     }
 
     return (
-        <Form
-            labelAlign="left"
-            labelWrap
-            labelCol={{ span: 1 }}
-            onFinish={vals => {
-                createItemMutation.mutate(
-                    {
-                        item_type: itemTypeSlug,
-                        info: vals,
-                        setAsParentTo,
-                    },
-                    { onSuccess: onFinishCreated },
-                )
-            }}
-        >
+        <FormWrap>
             {Object.entries(itemType.item_schema.properties ?? {}).map(([fieldName, fieldData]) =>
                 typeof fieldData === 'boolean' ? null : (
-                    <Form.Item
-                        key={fieldName}
-                        label={fieldData?.title ?? fieldName}
-                        name={fieldName}
-                        rules={[
-                            {
-                                required: itemType.item_schema?.required?.includes(fieldName),
-                                message: `${fieldData?.title ?? fieldName} is required`,
-                            },
-                        ]}
-                    >
+                    <LabeledFormRow key={fieldName}>
+                        <Typography.Text>{fieldData?.title ?? fieldName}</Typography.Text>
+
                         {fieldData.type === 'string' ? (
                             <AutoComplete
+                                value={newItem.info?.[fieldName] || ''}
+                                onSelect={val => {
+                                    setNewItem(i => ({
+                                        ...i,
+                                        info: { ...i.info, [fieldName]: val },
+                                    }))
+                                }}
+                                onChange={val => {
+                                    setNewItem(i => ({
+                                        ...i,
+                                        info: { ...i.info, [fieldName]: val },
+                                    }))
+                                }}
                                 allowClear
                                 filterOption
-                                style={{ maxWidth: '300px' }}
+                                style={{ maxWidth: '300px', flex: 1 }}
                                 options={autocompleteChoices?.[fieldName]}
+                                status={
+                                    itemType.item_schema?.required?.includes(fieldName) &&
+                                    !newItem.info?.[fieldName]
+                                        ? 'error'
+                                        : undefined
+                                }
                             />
                         ) : fieldData.type === 'number' ? (
-                            <InputNumber />
+                            <InputNumber
+                                precision={0}
+                                value={newItem.info?.[fieldName] || ''}
+                                onChange={val => {
+                                    setNewItem(i => ({
+                                        ...i,
+                                        info: { ...i.info, [fieldName]: Number(val) },
+                                    }))
+                                }}
+                            />
                         ) : (
                             <div>UnsupportedType</div>
                         )}
-                    </Form.Item>
+                    </LabeledFormRow>
                 ),
             )}
-            <Form.Item>
+            <div>
                 <Button
+                    disabled={
+                        !itemType?.item_schema?.required?.every(
+                            fieldName => !!newItem.info?.[fieldName],
+                        )
+                    }
                     type="primary"
-                    htmlType="submit"
                     loading={createItemMutation.isPending}
+                    onClick={() => {
+                        createItemMutation.mutate(newItem, { onSuccess: onFinishCreated })
+                    }}
                 >
                     Create
                 </Button>
-            </Form.Item>
-        </Form>
+            </div>
+        </FormWrap>
     )
 }
 

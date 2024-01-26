@@ -108,6 +108,7 @@ const ItemDetails = ({}: ItemDetailsProps) => {
                             />
                         ) : fieldData.type === 'number' ? (
                             <InputNumber
+                                precision={0}
                                 defaultValue={item.info?.[fieldName]}
                                 onChange={val => {
                                     if (
