@@ -3,16 +3,9 @@ version: '3'
 # prefix any of these commands with DOCKER_HOST='connection string for remote host' if you'd like!
 tasks:
   pip-compile:
-    desc: create requirements.txt from requirements.in
+    # this one needs to run locally against the dev setup, because the prod file doesnt have the requirements.in files
     cmds:
-      - docker compose -f docker-compose.production.yml run --build backend pip-compile
-      - docker compose -f docker-compose.production.yml run --build backend pip-compile requirements-dev.in
-    sources:
-      - backend/requirements.in
-      - backend/requirements-dev.in
-    generates:
-      - backend/requirements.txt
-      - backend/requirements-dev.txt
+      - DOCKER_HOST= task pip-compile
 
   build_fe:
     cmds:
