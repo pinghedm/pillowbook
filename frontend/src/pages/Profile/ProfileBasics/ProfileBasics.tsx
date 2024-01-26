@@ -1,4 +1,4 @@
-import { Alert, Button, Divider, InputNumber } from 'antd'
+import { Alert, Button, Divider, InputNumber, Switch } from 'antd'
 import React, { useState } from 'react'
 import { useItemTypes } from 'services/item_type_service'
 import { useUpdateUserSettings, useUserSettings } from 'services/user_service'
@@ -104,6 +104,27 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                         </Button>
                     ))}
                 </div>
+            </div>
+            <Divider />
+            <div>
+                <Switch
+                    checked={userSettings?.use24HrTime ?? true}
+                    onChange={checked => {
+                        setSaving(true)
+                        userSettingsMutation.mutate(
+                            {
+                                ...userSettings,
+                                use24HrTime: checked,
+                            },
+                            {
+                                onSuccess: () => {
+                                    setSaving(false)
+                                },
+                            },
+                        )
+                    }}
+                />{' '}
+                Use 24 hr time format
             </div>
         </>
     )

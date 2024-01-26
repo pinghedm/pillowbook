@@ -336,9 +336,10 @@ const AddActivity = ({}: AddActivityProps) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <DatePicker.RangePicker
                             showTime={{
-                                format: 'HH:mm',
+                                format: userSettings?.use24HrTime ? 'HH:mm' : 'hh:mm a',
                                 use12Hours: !(userSettings?.use24HrTime ?? true),
                             }}
+                            format={userSettings?.use24HrTime ? 'MM/dd/yyyy HH:mm' : 'MM/dd/yyyy hh:mm a' }
                             allowEmpty={[true, true]}
                             value={[
                                 newActivity.activityDetails.start_time

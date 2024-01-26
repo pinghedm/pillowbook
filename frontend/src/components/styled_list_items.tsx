@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Activity } from "services/activities_service";
 import { Item } from "services/item_service";
 import { capitalizeWords } from "services/utils";
+import { useUserSettings } from "services/user_service";
 import styled from "styled-components";
 
 export interface ItemListItemProps { 
@@ -75,6 +76,9 @@ export const ItemListItem = ({item, path, actions, extras}: ItemListItemProps) =
 }
 
 export const ActivityListItem = ({item, path, actions, extras}: ActivityListItemProps) => {
+
+    const { data: userSettings } = useUserSettings()
+
     return (
         <Link to={{pathname: path}}>
             <StyledListItem actions={actions?.map(i => i)} extra={extras?.map(i => i)}>
@@ -110,15 +114,15 @@ export const ActivityListItem = ({item, path, actions, extras}: ActivityListItem
                             ''
                         )}
                         {item.start_time
-                            ? DateTime.fromISO(item.start_time).toLocaleString(
-                                  DateTime.DATETIME_SHORT,
-                              )
+                            ? userSettings?.use24HrTime 
+                                ? <>{DateTime.fromISO(item.start_time).toLocaleString(DateTime.DATE_SHORT)} {DateTime.fromISO(item.start_time).toLocaleString(DateTime.TIME_24_SIMPLE)}</>
+                                : DateTime.fromISO(item.start_time).toLocaleString(DateTime.DATETIME_SHORT)
                             : '[No Start Time]'}{' '}
                         -
                         {item.end_time
-                            ? DateTime.fromISO(item.end_time).toLocaleString(
-                                  DateTime.DATETIME_SHORT,
-                              )
+                            ? userSettings?.use24HrTime 
+                                ? <>{DateTime.fromISO(item.end_time).toLocaleString(DateTime.DATE_SHORT)} {DateTime.fromISO(item.end_time).toLocaleString(DateTime.TIME_24_SIMPLE)}</>
+                                : DateTime.fromISO(item.end_time).toLocaleString(DateTime.DATETIME_SHORT)
                             : '[No End Time]'}
                     </StyledDescription>
                 }/>
