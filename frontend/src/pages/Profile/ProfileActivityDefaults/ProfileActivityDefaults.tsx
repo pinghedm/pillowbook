@@ -140,6 +140,26 @@ const ProfileActivityDefaults = ({}: ProfileActivityDefaultsProps) => {
                         />{' '}
                         Default End Time To Now
                     </div>
+                    <div>
+                        <Switch
+                            checked={userSettings?.use24HrTime ?? true}
+                            onChange={checked => {
+                                setSaving(true)
+                                userSettingsMutation.mutate(
+                                    {
+                                        ...userSettings,
+                                        use24HrTime: checked,
+                                    },
+                                    {
+                                        onSuccess: () => {
+                                            setSaving(false)
+                                        },
+                                    },
+                                )
+                            }}
+                        />{' '}
+                        Use 24 hr time in input fields
+                    </div>
                 </div>
             </div>
         </div>
