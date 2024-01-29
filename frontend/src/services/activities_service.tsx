@@ -14,7 +14,7 @@ export interface Activity {
     end_time: string // isoformat
     finished: boolean
     pending: boolean
-    rating: number
+    rating: number | null
     icon_url: string
 }
 
@@ -28,7 +28,7 @@ export interface ActivityDetail {
     finished: boolean
     pending: boolean
 
-    rating?: number
+    rating: number | null
     notes: string
     info: Record<string, any>
 }

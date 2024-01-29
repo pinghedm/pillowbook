@@ -1,9 +1,4 @@
-import {
-    PushpinFilled,
-    PushpinOutlined,
-    SearchOutlined,
-    StarFilled,
-} from '@ant-design/icons'
+import { PushpinFilled, PushpinOutlined, SearchOutlined, StarFilled } from '@ant-design/icons'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Cascader, Input, List } from 'antd'
 import { ItemListItem } from 'components/styled_list_items'
@@ -162,7 +157,7 @@ const Items = ({}: ItemsProps) => {
                 }}
                 dataSource={items}
                 renderItem={(item, index) => (
-                    <ItemListItem 
+                    <ItemListItem
                         path={`${item.token}`}
                         item={item}
                         actions={[
@@ -186,12 +181,13 @@ const Items = ({}: ItemsProps) => {
                                     alignItems: 'center',
                                 }}
                             >
-                                {item.rating
+                                {item.rating !== null
                                     ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
                                     : '-'}{' '}
                                 <StarFilled />
-                            </div>
-                        ]}/>
+                            </div>,
+                        ]}
+                    />
                 )}
             />
         </div>

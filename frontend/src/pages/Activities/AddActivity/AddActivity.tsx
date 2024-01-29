@@ -380,6 +380,11 @@ const AddActivity = ({}: AddActivityProps) => {
                         ...newActivity.activityDetails,
                         start_time: newActivity.activityDetails.start_time || undefined,
                         end_time: newActivity.activityDetails.end_time || undefined,
+                        rating:
+                            newActivity.activityDetails.rating === null
+                                ? null
+                                : newActivity.activityDetails.rating /
+                                  (userSettings?.ratingMax ?? 5),
                     },
                 },
                 {
@@ -520,11 +525,18 @@ const AddActivity = ({}: AddActivityProps) => {
                     <InputNumber
                         precision={2}
                         max={userSettings?.ratingMax ?? 5}
-                        value={newActivity.activityDetails.rating || ''}
+                        value={
+                            newActivity.activityDetails.rating === null
+                                ? undefined
+                                : newActivity.activityDetails.rating
+                        }
                         onChange={val => {
                             setNewActivity(a => ({
                                 ...a,
-                                activityDetails: { ...a.activityDetails, rating: val || undefined },
+                                activityDetails: {
+                                    ...a.activityDetails,
+                                    rating: val === null ? val : Number(val),
+                                },
                             }))
                         }}
                     />

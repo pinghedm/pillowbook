@@ -215,20 +215,22 @@ const Activities = ({}: ActivitiesProps) => {
                     <ActivityListItem
                         path={`${item.item_type}/${item.token}`}
                         item={item}
-                        extras={[<div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                gap: '5px',
-                                alignItems: 'center',
-                            }}
-                        >
-                            {item.rating
-                                ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
-                                : '-'}{' '}
-                            <StarFilled />
-                        </div>]}
-                        />
+                        extras={[
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    gap: '5px',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                {item.rating !== null
+                                    ? (item.rating * (userSettings?.ratingMax ?? 5)).toFixed(1)
+                                    : '-'}{' '}
+                                <StarFilled />
+                            </div>,
+                        ]}
+                    />
                 )}
             />
         </div>

@@ -149,7 +149,11 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                                     format: userSettings?.use24HrTime ? 'HH:mm' : 'hh:mm a',
                                     use12Hours: !(userSettings?.use24HrTime ?? true),
                                 }}
-                                format={userSettings?.use24HrTime ? 'MM/dd/yyyy HH:mm' : 'MM/dd/yyyy hh:mm a' }
+                                format={
+                                    userSettings?.use24HrTime
+                                        ? 'MM/dd/yyyy HH:mm'
+                                        : 'MM/dd/yyyy hh:mm a'
+                                }
                                 allowEmpty={[true, true]}
                                 defaultValue={[
                                     activity.start_time
@@ -239,13 +243,22 @@ const ActivityDetail = ({}: ActivityDetailProps) => {
                     <InputNumber
                         precision={2}
                         max={userSettings?.ratingMax ?? 5}
-                        defaultValue={(activity.rating || 0) * (userSettings?.ratingMax ?? 5)}
+                        defaultValue={
+                            activity.rating !== null
+                                ? activity.rating * (userSettings?.ratingMax ?? 5)
+                                : undefined
+                        }
                         onChange={val => {
                             setSaving(true)
                             updateActivityMutation.mutate(
                                 {
                                     token: activity.token,
-                                    patch: { rating: Number(val) / (userSettings?.ratingMax ?? 5) },
+                                    patch: {
+                                        rating:
+                                            val === null
+                                                ? null
+                                                : Number(val) / (userSettings?.ratingMax ?? 5),
+                                    },
                                 },
                                 {
                                     onSettled: () => {

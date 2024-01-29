@@ -18,7 +18,7 @@ export interface ItemFilterInfo {
 export interface Item {
     token: string
     name: string
-    rating?: number
+    rating: number | null
     item_type: string
     parent_item_type: string
     icon_url: string
@@ -27,7 +27,7 @@ export interface Item {
 
 export interface ItemDetail {
     token: string
-    rating: number
+    rating: number | null
     notes: string
     item_type: string // slug
     info: Record<string, any>

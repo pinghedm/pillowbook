@@ -195,13 +195,22 @@ const ItemDetails = ({}: ItemDetailsProps) => {
                 <InputNumber
                     precision={2}
                     max={userSettings?.ratingMax ?? 5}
-                    defaultValue={(item.rating || 0) * (userSettings?.ratingMax ?? 5)}
+                    defaultValue={
+                        item.rating !== null
+                            ? item.rating * (userSettings?.ratingMax ?? 5)
+                            : undefined
+                    }
                     onChange={val => {
                         setSaving(true)
                         updateItemMutation.mutate(
                             {
                                 token: item.token,
-                                patch: { rating: Number(val) / (userSettings?.ratingMax ?? 5) },
+                                patch: {
+                                    rating:
+                                        val !== null
+                                            ? Number(val) / (userSettings?.ratingMax ?? 5)
+                                            : null,
+                                },
                             },
                             {
                                 onSettled: () => {
