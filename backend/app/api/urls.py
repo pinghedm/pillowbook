@@ -3,6 +3,7 @@ from app.api.non_drf_views import (
     get_activities_static_filters,
     get_item_autocomplete_values,
     get_items_static_filters,
+    update_item_icon,
     update_item_type_icon,
 )
 from app.api.views import (
@@ -32,4 +33,5 @@ urlpatterns = [
     ),
     path("get_activities_static_filters", get_activities_static_filters),
     path("get_items_static_filters", get_items_static_filters),
+    re_path(f"^item_icon/(?P<item_token>I_{TOKEN_REGEX})", update_item_icon),
 ]

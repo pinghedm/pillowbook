@@ -102,6 +102,11 @@ class ItemType(TimeStampedModel):
 def _gen_item_token():
     return f"I_{gen_token()}"
 
+def _item_icon_upload_helper(instance, filename):
+    now = datetime.datetime.now()
+    return f"{instance.user.pk}/item/{now.isoformat()}/{filename}"
+
+
 
 class Item(TimeStampedModel):
     name_template_regex = re.compile(r"{{([\w\-\.!%]+)}}")
@@ -119,6 +124,13 @@ class Item(TimeStampedModel):
     )
     parent = models.ForeignKey("Item", on_delete=models.SET_NULL, blank=True, null=True)
     pinned = BooleanField(default=False)
+    icon = models.ImageField(
+        upload_to=_item_icon_upload_helper, null=True, blank=True
+    )
+
+    @property
+    def icon_url(self):
+        return f"{WEB_HOST if WEB_HOST.startswith("http") else f"https://{WEB_HOST}"}{self.icon.url}" if self.icon else ""
 
     @property
     def parent_name(self):

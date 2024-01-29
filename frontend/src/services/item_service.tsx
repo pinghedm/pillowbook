@@ -22,6 +22,7 @@ export interface Item {
     item_type: string
     parent_item_type: string
     icon_url: string
+    item_type_icon_url: string
     pinned: boolean
 }
 
@@ -35,6 +36,8 @@ export interface ItemDetail {
     parent_name: string
     parent_token?: string
     pinned: boolean
+    icon_url: string
+    item_type_icon_url: string
 }
 
 export const useItems = (

@@ -70,3 +70,15 @@ def get_items_static_filters(request: HttpRequest) -> JsonResponse:
     res["itemTypes"] = [{"label": i[0], "value": i[1]} for i in item_type_tuples]
 
     return JsonResponse(res)
+
+
+@login_required
+def update_item_icon(request: HttpRequest, item_token: str) -> HttpResponse:
+    if request.method == "DELETE":
+        file = None
+    else:
+        file = request.FILES["file"]
+    item = get_object_or_404(Item, user=request.user, token=item_token)
+    item.icon = file
+    item.save()
+    return HttpResponse()

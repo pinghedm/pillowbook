@@ -10,15 +10,19 @@ import {
     Alert,
     Popconfirm,
     Switch,
+    Upload,
 } from 'antd'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDeleteItem, useItem, useUpdateItem } from 'services/item_service'
 import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
 import { useUserSettings } from 'services/user_service'
-import { PlusOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
 import { FormWrap, LabeledFormRow } from 'components/FormWrappers'
 import { useState } from 'react'
+import { readCookie } from 'services/utils'
+import axios from 'axios'
+import { useQueryClient } from '@tanstack/react-query'
 
 export interface ItemDetailsProps {}
 
@@ -33,7 +37,7 @@ const ItemDetails = ({}: ItemDetailsProps) => {
     const [saving, setSaving] = useState(false)
     const deleteItemMutation = useDeleteItem()
     const navigate = useNavigate()
-
+    const queryClient = useQueryClient()
     if (!item || !itemType) {
         return <Spin />
     }
@@ -190,6 +194,48 @@ const ItemDetails = ({}: ItemDetailsProps) => {
                     </div>
                 </LabeledFormRow>
             ) : null}
+            <LabeledFormRow>
+                <Typography.Text>Icon</Typography.Text>
+                {item.icon_url ? (
+                    <img
+                        style={{ height: '50px', width: '50px' }}
+                        src={item.icon_url}
+                    />
+                ) : null}
+                <Button
+                    icon={<DeleteOutlined />}
+                    onClick={() => {
+                        axios.delete(
+                            `${import.meta.env.VITE_API_URL_BASE || ''}/api/item_icon/${
+                                item.token
+                            }`,
+                        )
+                        queryClient.cancelQueries({ queryKey: ['items'] })
+                        setTimeout(() => {
+                            queryClient.invalidateQueries({ queryKey: ['items'] })
+                        }, 500)
+                    }}
+                />
+                <Upload
+                    action={`${import.meta.env.VITE_API_URL_BASE || ''}/api/item_icon/${
+                        item.token
+                    }`}
+                    headers={{ 'X-CSRFToken': readCookie(axios.defaults.xsrfCookieName) ?? '' }}
+                    withCredentials
+                    accept=".png, .jpg, .svg, .gif"
+                    maxCount={1}
+                    showUploadList={{ showPreviewIcon: false }}
+                    listType="picture-card"
+                    onChange={() => {
+                        queryClient.cancelQueries({ queryKey: ['items'] })
+                        setTimeout(() => {
+                            queryClient.invalidateQueries({ queryKey: ['items'] })
+                        }, 500)
+                    }}
+                >
+                    <Button icon={<UploadOutlined />} />
+                </Upload>
+            </LabeledFormRow>
             <LabeledFormRow>
                 <Typography.Text>Rating</Typography.Text>
                 <InputNumber

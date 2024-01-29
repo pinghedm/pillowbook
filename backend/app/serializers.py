@@ -32,7 +32,8 @@ class ItemTypeSerializer(ModelSerializer):
 
 
 class ActivityListSerializer(ModelSerializer):
-    icon_url = CharField(source="item.item_type.icon_url", read_only=True)
+    item_type_icon_url = CharField(source="item.item_type.icon_url", read_only=True)
+    item_icon_url = CharField(source="item.icon_url", read_only=True)
     item_type = CharField(source="item.item_type.slug")
     item_name = CharField(source="item.name")
 
@@ -46,7 +47,8 @@ class ActivityListSerializer(ModelSerializer):
             "finished",
             "rating",
             "item_name",
-            "icon_url",
+            "item_type_icon_url",
+            "item_icon_url",
             "pending",
         ]
 
@@ -76,7 +78,8 @@ class ActivityDetailSerializer(ModelSerializer):
 
 class ItemListSerializer(ModelSerializer):
     item_type = CharField(source="item_type.slug")
-    icon_url = CharField(read_only=True, source="item_type.icon_url")
+    item_type_icon_url = CharField(read_only=True, source="item_type.icon_url")
+    icon_url = CharField(read_only=True)
 
     class Meta:
         model = Item
@@ -87,6 +90,7 @@ class ItemListSerializer(ModelSerializer):
             "item_type",
             "parent_name",
             "icon_url",
+            "item_type_icon_url",
             "pinned",
         ]
 
@@ -95,7 +99,8 @@ class ItemDetailSerializer(ModelSerializer):
     item_type = CharField(source="item_type.slug")
     token = CharField(read_only=True)
     parent_token = CharField(source="parent.token", allow_null=True)
-    icon_url = CharField(read_only=True, source="item_type.icon_url")
+    item_type_icon_url = CharField(read_only=True, source="item_type.icon_url")
+    icon_url = CharField(read_only=True)
 
     class Meta:
         model = Item
@@ -108,6 +113,7 @@ class ItemDetailSerializer(ModelSerializer):
             "name",
             "parent_name",
             "parent_token",
+            "item_type_icon_url",
             "icon_url",
             "pinned",
         ]

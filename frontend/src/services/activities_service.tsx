@@ -15,7 +15,8 @@ export interface Activity {
     finished: boolean
     pending: boolean
     rating: number | null
-    icon_url: string
+    item_icon_url: string
+    item_type_icon_url: string
 }
 
 export interface ActivityDetail {
