@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useItemType, useItemTypeAutoCompleteSuggestions } from 'services/item_type_service'
+import {
+    ItemType,
+    ItemTypeDetail,
+    useItemType,
+    useItemTypeAutoCompleteSuggestions,
+} from 'services/item_type_service'
 import {
     AutoComplete,
     InputNumber,
@@ -12,28 +17,269 @@ import {
     Popover,
     Select,
     Typography,
+    Radio,
 } from 'antd'
 import DatePicker from 'components/DatePicker'
-import { ActivityDetail, CreateActivityType, useCreateActivity } from 'services/activities_service'
+import {
+    ActivityDetail,
+    CreateActivityType,
+    _CreateActivityCreateItemDetails,
+    _CreateActivityExistingItemDetails,
+    useCreateActivity,
+} from 'services/activities_service'
 import { useUserSettings } from 'services/user_service'
 import { DateTime } from 'luxon'
 import { PlusOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
-import { useItem } from 'services/item_service'
+import { useItem, useItems } from 'services/item_service'
 import { CheckboxWrapper, FormWrap, LabeledFormRow } from 'components/FormWrappers'
+import useDebounce from 'hooks/useDebounce'
+import { usePagedResultData } from 'services/utils'
 export interface AddActivityProps {}
 
-const AddActivity = ({}: AddActivityProps) => {
-    const navigate = useNavigate()
-    const { type: itemTypeSlug, token } = useParams()
+const itemDetailsIsExisting = (
+    itemDetails: CreateActivityType['itemDetails'],
+): itemDetails is _CreateActivityExistingItemDetails => {
+    return !!(itemDetails as _CreateActivityExistingItemDetails).token
+}
+const itemDetailsIsNew = (
+    itemDetails: CreateActivityType['itemDetails'],
+): itemDetails is _CreateActivityCreateItemDetails => {
+    return !!(itemDetails as _CreateActivityCreateItemDetails).info
+}
 
+const CreateNewItem = ({
+    itemType,
+    itemDetails,
+    setItemDetails,
+}: {
+    itemType: ItemTypeDetail
+    itemDetails: _CreateActivityCreateItemDetails
+    setItemDetails: (newItemDetails: _CreateActivityCreateItemDetails) => void
+}) => {
+    const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemType.slug)
+
+    return (
+        <>
+            {Object.entries(itemType.item_schema.properties ?? {}).map(([fieldName, fieldData]) =>
+                typeof fieldData === 'boolean' ? null : (
+                    <LabeledFormRow key={fieldName}>
+                        <Typography.Text>{fieldData?.title ?? fieldName}</Typography.Text>
+                        {fieldData.type === 'string' ? (
+                            <AutoComplete
+                                value={itemDetails.info?.[fieldName] || ''}
+                                onSelect={val => {
+                                    setItemDetails({
+                                        ...itemDetails,
+                                        info: {
+                                            ...itemDetails.info,
+                                            [fieldName]: val,
+                                        },
+                                    })
+                                }}
+                                onChange={val => {
+                                    setItemDetails({
+                                        ...itemDetails,
+                                        info: {
+                                            ...itemDetails.info,
+                                            [fieldName]: val,
+                                        },
+                                    })
+                                }}
+                                allowClear
+                                filterOption
+                                style={{ maxWidth: '300px', flex: 1 }}
+                                options={autocompleteChoices?.[fieldName]}
+                                status={
+                                    itemType.item_schema?.required?.includes(fieldName) &&
+                                    !itemDetails.info?.[fieldName]
+                                        ? 'error'
+                                        : undefined
+                                }
+                            />
+                        ) : fieldData.type === 'number' ? (
+                            <InputNumber
+                                precision={0}
+                                value={itemDetails.info?.[fieldName] || ''}
+                                onChange={val => {
+                                    setItemDetails({
+                                        ...itemDetails,
+                                        info: {
+                                            ...itemDetails.info,
+                                            [fieldName]: Number(val),
+                                        },
+                                    })
+                                }}
+                            />
+                        ) : (
+                            <div>UnsupportedType</div>
+                        )}
+                    </LabeledFormRow>
+                ),
+            )}
+        </>
+    )
+}
+
+const ItemSelection = ({
+    itemTypeSlug,
+    itemToken,
+    itemDetails,
+    setItemDetails,
+}: {
+    itemTypeSlug: string
+    itemToken?: string
+    itemDetails: CreateActivityType['itemDetails']
+    setItemDetails: (item: CreateActivityType['itemDetails']) => void
+}) => {
+    const [itemSearch, setItemSearch] = useState<string>()
+    const debouncedItemSearch = useDebounce(itemSearch)
+    const { data: itemsPaginatedResult } = useItems(1, 20, debouncedItemSearch, {
+        itemTypes: [itemTypeSlug ?? ''],
+    })
+    const items = usePagedResultData(itemsPaginatedResult).data
+    const { data: item } = useItem(itemToken)
+    const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
+    const [popoverOpen, setPopoverOpen] = useState(false)
     const { data: itemType } = useItemType(itemTypeSlug)
     const { data: parentItemType } = useItemType(itemType?.parent_slug ?? '')
-    const { data: item } = useItem(token)
+
+    const [createItem, setCreateItem] = useState<'existing' | 'newItem'>('newItem')
+    useEffect(() => {
+        if (itemToken) {
+            setCreateItem('existing')
+        }
+    }, [itemToken])
+    useEffect(() => {
+        if (itemToken && item && createItem === 'existing') {
+            setItemDetails({
+                token: item.token,
+                parent_token: item.parent_token,
+                item_type: item.item_type,
+            })
+        }
+    }, [item, itemDetails, setItemDetails, createItem])
+
+    if (itemToken && !item) {
+        return <Spin />
+    }
+    if (!itemType) {
+        return <Spin />
+    }
+
+    return (
+        <>
+            <Typography.Title level={4}>Item Information</Typography.Title>
+            {itemToken ? null : (
+                <Radio.Group
+                    value={createItem}
+                    onChange={e => {
+                        setCreateItem(e.target.value)
+                        if (e.target.value === 'existing') {
+                            setItemDetails({ token: '', item_type: itemTypeSlug, parent_token: '' })
+                        } else {
+                            setItemDetails({ info: {}, item_type: itemTypeSlug, parent_token: '' })
+                        }
+                    }}
+                >
+                    <Radio value="existing">Find Existing Item</Radio>
+                    <Radio value="newItem">Create New Item</Radio>
+                </Radio.Group>
+            )}
+            {createItem === 'existing' ? (
+                <Select
+                    disabled={!!itemToken}
+                    showSearch
+                    options={(items ?? []).map(i => ({ label: i.name, value: i.token }))}
+                    value={itemDetailsIsExisting(itemDetails) ? itemDetails.token : undefined}
+                    onChange={val => {
+                        setItemDetails({
+                            ...itemDetails,
+                            // @ts-ignore
+                            token: val,
+                        })
+                    }}
+                    style={{ maxWidth: '300px' }}
+                    popupMatchSelectWidth={false}
+                    onSearch={searchVal => {
+                        setItemSearch(searchVal)
+                    }}
+                    filterOption={false}
+                />
+            ) : null}
+
+            {createItem === 'newItem' ? (
+                <CreateNewItem
+                    itemType={itemType}
+                    itemDetails={itemDetails as _CreateActivityCreateItemDetails}
+                    setItemDetails={setItemDetails}
+                />
+            ) : null}
+            {parentItemType ? (
+                <LabeledFormRow>
+                    <Typography.Text>Item Parent</Typography.Text>
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: '5px',
+                            alignItems: 'center',
+                            flex: 1,
+                        }}
+                    >
+                        <Select
+                            disabled={!!itemToken}
+                            value={itemDetails?.parent_token}
+                            placeholder="Choose Parent"
+                            allowClear
+                            style={{ width: '300px' }}
+                            filterOption
+                            options={autocompleteChoices?.[parentItemType.slug]}
+                            showSearch
+                            onChange={val => {
+                                setItemDetails({ ...itemDetails, parent_token: val })
+                            }}
+                        />
+                        <Popover
+                            open={popoverOpen}
+                            onOpenChange={o => {
+                                setPopoverOpen(o)
+                            }}
+                            trigger={['click']}
+                            content={
+                                <div style={{ width: '50vw' }}>
+                                    <AddItem
+                                        itemTypeSlug={parentItemType.slug}
+                                        onFinishCreated={newItem => {
+                                            setItemDetails({
+                                                ...itemDetails,
+                                                parent_token: newItem.token,
+                                            })
+                                            setPopoverOpen(false)
+                                        }}
+                                    />
+                                </div>
+                            }
+                        >
+                            <Button
+                                disabled={!!itemToken}
+                                icon={<PlusOutlined />}
+                            />
+                        </Popover>
+                    </div>
+                </LabeledFormRow>
+            ) : null}
+        </>
+    )
+}
+
+const AddActivity = ({}: AddActivityProps) => {
+    const { type: itemTypeSlug, token } = useParams()
+    const { data: itemType } = useItemType(itemTypeSlug)
 
     const { data: userSettings } = useUserSettings()
 
-    const { data: autocompleteChoices } = useItemTypeAutoCompleteSuggestions(itemTypeSlug)
+    const navigate = useNavigate()
 
     const createActivityMutation = useCreateActivity()
 
@@ -112,33 +358,18 @@ const AddActivity = ({}: AddActivityProps) => {
         }
     }, [userSettings, newActivity, defaultsSet])
 
-    useEffect(() => {
-        if (
-            item &&
-            Object.keys(item?.info ?? {}).length &&
-            !Object.keys(newActivity.itemDetails.info).length
-        ) {
-            setNewActivity(a => ({ ...a, itemDetails: { ...a.itemDetails, info: item.info } }))
+    const submitAllowed = useMemo(() => {
+        if (itemDetailsIsExisting(newActivity?.itemDetails) && newActivity?.itemDetails) {
+            return !!newActivity?.itemDetails?.token
+        } else {
+            return itemType?.item_schema?.required?.every(
+                requiredFieldName =>
+                    !!(newActivity?.itemDetails as _CreateActivityCreateItemDetails)?.info?.[
+                        requiredFieldName
+                    ],
+            )
         }
-    }, [item, newActivity])
-    useEffect(() => {
-        if (item && item.parent_token) {
-            setNewActivity(a => ({
-                ...a,
-                itemDetails: { ...a.itemDetails, parent_token: item.parent_token },
-            }))
-        }
-    }, [item])
-
-    const [popoverOpen, setPopoverOpen] = useState(false)
-
-    const submitAllowed = useCallback(
-        () =>
-            itemType?.item_schema?.required?.every(
-                requiredFieldName => !!newActivity?.itemDetails?.info?.[requiredFieldName],
-            ),
-        [itemType, newActivity],
-    )
+    }, [itemType, newActivity.itemDetails])
 
     const submit = useCallback(
         (onSuccess: (activity: ActivityDetail) => void) => {
@@ -164,138 +395,19 @@ const AddActivity = ({}: AddActivityProps) => {
         return <Spin />
     }
 
-    if (token && !item) {
-        return <Spin />
-    }
-
     return (
         <div>
             <Typography.Title level={3}>Add {itemType.name}</Typography.Title>
-            <Typography.Title level={4}>Item Information</Typography.Title>
 
             <FormWrap>
-                {Object.entries(itemType.item_schema.properties ?? {}).map(
-                    ([fieldName, fieldData]) =>
-                        typeof fieldData === 'boolean' ? null : (
-                            <LabeledFormRow key={fieldName}>
-                                <Typography.Text>{fieldData?.title ?? fieldName}</Typography.Text>
-                                {fieldData.type === 'string' ? (
-                                    <AutoComplete
-                                        value={newActivity.itemDetails.info?.[fieldName] || ''}
-                                        onSelect={val => {
-                                            setNewActivity(a => ({
-                                                ...a,
-                                                itemDetails: {
-                                                    ...a.itemDetails,
-                                                    info: {
-                                                        ...a.itemDetails.info,
-                                                        [fieldName]: val,
-                                                    },
-                                                },
-                                            }))
-                                        }}
-                                        onChange={val => {
-                                            setNewActivity(a => ({
-                                                ...a,
-                                                itemDetails: {
-                                                    ...a.itemDetails,
-                                                    info: {
-                                                        ...a.itemDetails.info,
-                                                        [fieldName]: val,
-                                                    },
-                                                },
-                                            }))
-                                        }}
-                                        allowClear
-                                        filterOption
-                                        style={{ maxWidth: '300px', flex: 1 }}
-                                        options={autocompleteChoices?.[fieldName]}
-                                        status={
-                                            itemType.item_schema?.required?.includes(fieldName) &&
-                                            !newActivity.itemDetails.info?.[fieldName]
-                                                ? 'error'
-                                                : undefined
-                                        }
-                                    />
-                                ) : fieldData.type === 'number' ? (
-                                    <InputNumber
-                                        precision={0}
-                                        value={newActivity.itemDetails.info?.[fieldName] || ''}
-                                        onChange={val => {
-                                            setNewActivity(a => ({
-                                                ...a,
-                                                itemDetails: {
-                                                    ...a.itemDetails,
-                                                    info: {
-                                                        ...a.itemDetails.info,
-                                                        [fieldName]: Number(val),
-                                                    },
-                                                },
-                                            }))
-                                        }}
-                                    />
-                                ) : (
-                                    <div>UnsupportedType</div>
-                                )}
-                            </LabeledFormRow>
-                        ),
-                )}
-                {parentItemType ? (
-                    <LabeledFormRow>
-                        <Typography.Text>Item Parent</Typography.Text>
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                gap: '5px',
-                                alignItems: 'center',
-                                flex: 1,
-                            }}
-                        >
-                            <Select
-                                value={newActivity?.itemDetails?.parent_token}
-                                placeholder="Choose Parent"
-                                allowClear
-                                style={{ width: '300px' }}
-                                filterOption
-                                options={autocompleteChoices?.[parentItemType.slug]}
-                                showSearch
-                                onChange={val => {
-                                    setNewActivity(a => ({
-                                        ...a,
-                                        itemDetails: { ...a.itemDetails, parent_token: val },
-                                    }))
-                                }}
-                            />
-                            <Popover
-                                open={popoverOpen}
-                                onOpenChange={o => {
-                                    setPopoverOpen(o)
-                                }}
-                                trigger={['click']}
-                                content={
-                                    <div style={{ width: '50vw' }}>
-                                        <AddItem
-                                            itemTypeSlug={parentItemType.slug}
-                                            onFinishCreated={newItem => {
-                                                setNewActivity(a => ({
-                                                    ...a,
-                                                    itemDetails: {
-                                                        ...a.itemDetails,
-                                                        parent_token: newItem.token,
-                                                    },
-                                                }))
-                                                setPopoverOpen(false)
-                                            }}
-                                        />
-                                    </div>
-                                }
-                            >
-                                <Button icon={<PlusOutlined />} />
-                            </Popover>
-                        </div>
-                    </LabeledFormRow>
-                ) : null}
+                <ItemSelection
+                    itemTypeSlug={itemType.slug}
+                    itemToken={token}
+                    itemDetails={newActivity.itemDetails}
+                    setItemDetails={newDetails => {
+                        setNewActivity(a => ({ ...a, itemDetails: newDetails }))
+                    }}
+                />
                 <Divider />
                 <Typography.Title level={4}>Activity Information</Typography.Title>
                 <CheckboxWrapper>
@@ -339,7 +451,11 @@ const AddActivity = ({}: AddActivityProps) => {
                                 format: userSettings?.use24HrTime ? 'HH:mm' : 'hh:mm a',
                                 use12Hours: !(userSettings?.use24HrTime ?? true),
                             }}
-                            format={userSettings?.use24HrTime ? 'MM/dd/yyyy HH:mm' : 'MM/dd/yyyy hh:mm a' }
+                            format={
+                                userSettings?.use24HrTime
+                                    ? 'MM/dd/yyyy HH:mm'
+                                    : 'MM/dd/yyyy hh:mm a'
+                            }
                             allowEmpty={[true, true]}
                             value={[
                                 newActivity.activityDetails.start_time

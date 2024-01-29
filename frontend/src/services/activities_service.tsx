@@ -33,12 +33,19 @@ export interface ActivityDetail {
     info: Record<string, any>
 }
 
+export interface _CreateActivityCreateItemDetails {
+    info: ItemDetail['info']
+    item_type: ItemDetail['item_type']
+    parent_token?: string
+}
+
+export interface _CreateActivityExistingItemDetails {
+    token: string
+    parent_token?: string
+}
+
 export interface CreateActivityType {
-    itemDetails: {
-        info: ItemDetail['info']
-        item_type: ItemDetail['item_type']
-        parent_token?: string
-    }
+    itemDetails: _CreateActivityExistingItemDetails | _CreateActivityCreateItemDetails
     activityDetails: Omit<ActivityDetail, 'token' | 'item' | 'item_type'>
 }
 
