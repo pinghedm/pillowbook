@@ -106,7 +106,7 @@ class ItemDetailsType(TypedDict):
     info: dict[str, Any]
 
 
-def get_or_create_validated_item(
+def create_validated_item(
     item_details: ItemDetailsType, item_type: ItemType, user: User
 ):
     item_required_fields = item_type.item_schema.get("required", [])
@@ -115,16 +115,9 @@ def get_or_create_validated_item(
     except jsonschema.exceptions.ValidationError as e:
         return Response(e.message, status=status.HTTP_400_BAD_REQUEST)
 
-    item, created = Item.objects.get_or_create(
-        item_type=item_type,
-        **{
-            f"info__{k}": v
-            for k, v in item_details["info"].items()
-            if k in item_required_fields
-        },
-        defaults={**item_details, "item_type": item_type, "user": user},
-    )
-    return item, created
+    item = Item(item_type=item_type, user=user, info=item_details["info"])
+    item.save()
+    return item
 
 
 class ActivityDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -205,16 +198,19 @@ class ActivityList(generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         incoming = request.data
-
         item_details = incoming.pop("itemDetails")
+
+        item_token = item_details.pop("token", None)
         item_parent_token = item_details.pop("parent_token", None)
-
         item_type_slug = item_details.pop("item_type")
-        item_type = get_object_or_404(ItemType, slug=item_type_slug, user=request.user)
-
-        item, created = get_or_create_validated_item(
-            item_details, item_type, request.user
-        )
+        if item_token:
+            # if there is a token then its useExisting item
+            item = get_object_or_404(Item, token=item_token, user=request.user)
+        else:
+            item_type = get_object_or_404(
+                ItemType, slug=item_type_slug, user=request.user
+            )
+            item = create_validated_item(item_details, item_type, request.user)
         if item_parent_token:
             parent = Item.objects.get(user=request.user, token=item_parent_token)
             item.parent = parent
@@ -290,9 +286,7 @@ class ItemList(generics.ListCreateAPIView):
 
         item_type = get_object_or_404(ItemType, slug=item_type_slug, user=request.user)
 
-        item, actually_created = get_or_create_validated_item(
-            item_details, item_type, request.user
-        )
+        item = create_validated_item(item_details, item_type, request.user)
 
         if set_as_parent_to:
             child_item = Item.objects.get(user=request.user, token=set_as_parent_to)
@@ -302,7 +296,7 @@ class ItemList(generics.ListCreateAPIView):
         serialized_item = self.serializer_class(item).data
         return Response(
             serialized_item,
-            status=status.HTTP_201_CREATED if actually_created else status.HTTP_200_OK,
+            status=status.HTTP_201_CREATED,
         )
 
 
