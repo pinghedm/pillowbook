@@ -17,6 +17,7 @@ services:
       - ./.env.prod
     environment:
       DEBUG: false
+      COMMIT_HASH:
     restart: unless-stopped
     entrypoint: scripts/entrypoint.sh
     command: sh -c 'python manage.py migrate && gunicorn -b "0.0.0.0:8000" --workers=3 --preload --access-logfile guni_access.log --error-logfile guni_error.log backend.wsgi'

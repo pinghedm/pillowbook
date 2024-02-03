@@ -11,7 +11,7 @@ import {
     useSearchParams,
 } from 'react-router-dom'
 import { ConfigProvider, FloatButton, Layout, Menu, Modal, Spin, ThemeConfig } from 'antd'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import Home from 'pages/Home/Home.lazy'
 import {
     BookOutlined,
@@ -257,10 +257,34 @@ const RootLayout = () => {
     return <LoggedInRoot />
 }
 
+const useBackendVersion = () => {
+    const _get = async () => {
+        const res = await axios.get<{ version: string }>('/api/version')
+        return res.data.version
+    }
+    const query = useQuery({ queryKey: ['backendVersion'], queryFn: _get })
+    return query
+}
+const AppVersion = () => {
+    const frontendVersion = import.meta.env.VITE_COMMIT_HASH
+    const { data: backendVersion } = useBackendVersion()
+
+    return (
+        <div>
+            <div>Frontend: {frontendVersion}</div>
+            <div>Backend: {backendVersion}</div>
+        </div>
+    )
+}
+
 const routes = [
     {
         path: '/',
         element: <Navigate to={{ pathname: 'home' }} />,
+    },
+    {
+        path: 'version',
+        element: <AppVersion />,
     },
     {
         path: 'home',
