@@ -19,7 +19,7 @@ tasks:
     desc: run backend daemon
     vars:
       GIT_HASH:
-        sh: git rev-parse HEAD
+        sh: git rev-parse --short HEAD
     cmds:
       - docker compose -f docker-compose.production.yml run --build backend python manage.py collectstatic --no-input
       - COMMIT_HASH={{.GIT_HASH}} docker compose -f docker-compose.production.yml up --no-deps --build -d backend
