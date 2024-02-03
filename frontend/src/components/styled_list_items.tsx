@@ -69,7 +69,7 @@ export const ItemListItem = ({ item, path, actions, extras }: ItemListItemProps)
                             ) : (
                                 <QuestionOutlined />
                             )}
-                            {capitalizeWords(item.item_type)}
+                            {capitalizeWords(item.item_type_name)}
                         </StyledAvatar>
                     }
                 />
@@ -99,7 +99,7 @@ export const ActivityListItem = ({ item, path, actions, extras }: ActivityListIt
                             ) : (
                                 <QuestionCircleOutlined />
                             )}
-                            {capitalizeWords(item.item_type)}
+                            {capitalizeWords(item.item_type_name)}
                         </StyledAvatar>
                     }
                     description={

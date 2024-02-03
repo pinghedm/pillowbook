@@ -35,6 +35,7 @@ class ActivityListSerializer(ModelSerializer):
     item_type_icon_url = CharField(source="item.item_type.icon_url", read_only=True)
     item_icon_url = CharField(source="item.icon_url", read_only=True)
     item_type = CharField(source="item.item_type.slug")
+    item_type_name = CharField(source="item.item_type.name")
     item_name = CharField(source="item.name")
 
     class Meta:
@@ -42,6 +43,7 @@ class ActivityListSerializer(ModelSerializer):
         fields = [
             "token",
             "item_type",
+            "item_type_name",
             "start_time",
             "end_time",
             "finished",
@@ -78,6 +80,7 @@ class ActivityDetailSerializer(ModelSerializer):
 
 class ItemListSerializer(ModelSerializer):
     item_type = CharField(source="item_type.slug")
+    item_type_name = CharField(source="item_type.name")
     item_type_icon_url = CharField(read_only=True, source="item_type.icon_url")
     icon_url = CharField(read_only=True)
 
@@ -88,6 +91,7 @@ class ItemListSerializer(ModelSerializer):
             "name",
             "rating",
             "item_type",
+            "item_type_name",
             "parent_name",
             "icon_url",
             "item_type_icon_url",
