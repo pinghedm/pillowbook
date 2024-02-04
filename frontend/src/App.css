@@ -1,0 +1,10 @@
+#add-activity-modal .ant-list .ant-row > div,
+#add-activity-modal .ant-list .ant-row .ant-col:first-child {
+  display: flex;
+}
+#add-activity-modal .ant-list .ant-row .ant-list-item {
+  flex: 1 1 auto;
+}
+#add-activity-modal .ant-list .ant-row .ant-list-item .ant-card {
+  height: 100%;
+}

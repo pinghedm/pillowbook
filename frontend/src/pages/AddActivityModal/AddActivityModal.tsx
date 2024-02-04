@@ -1,5 +1,5 @@
 import { QuestionOutlined } from '@ant-design/icons'
-import { Card, Typography } from 'antd'
+import { Card, List, Typography } from 'antd'
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useItemTypes } from 'services/item_type_service'
@@ -11,63 +11,61 @@ export interface AddActivityModalProps {
 const AddActivityModal = ({ closeModal }: AddActivityModalProps) => {
     const { data: itemTypes } = useItemTypes()
     return (
-        <div>
+        <div id='add-activity-modal'>
             <Typography.Title level={3}>Add New Activity</Typography.Title>
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '5px',
-                    marginTop: '5px',
-                    flexWrap: 'wrap',
+            <List
+                grid={{
+                    gutter: 10,
+                    column: 2,
                 }}
-            >
-                {(itemTypes ?? []).map(it => (
-                    <Link
-                        key={it.slug}
-                        to={{ pathname: `/activities/${it.slug}` }}
-                    >
-                        <Card
-                            onClick={closeModal}
-                            hoverable
-                            style={{ width: '200px' }}
-                            cover={
-                                <div
-                                    style={{
-                                        fontSize: '32px',
-                                        width: '100%',
-                                    }}
-                                >
+                dataSource={itemTypes ?? []}
+                renderItem={(item) => (
+                    <List.Item>
+                        <Link
+                            key={item.slug}
+                            to={{ pathname: `/activities/${item.slug}` }}
+                        >
+                            <Card
+                                onClick={closeModal}
+                                hoverable
+                                cover={
                                     <div
                                         style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginTop: '10px',
-                                            marginBottom: '10px',
+                                            fontSize: '32px',
+                                            height: '50px'
                                         }}
                                     >
-                                        {it.icon_url ? (
-                                            <img
-                                                style={{ height: '50px', width: '50px' }}
-                                                src={it.icon_url}
-                                            />
-                                        ) : (
-                                            <QuestionOutlined />
-                                        )}
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                marginTop: '10px',
+                                                marginBottom: '10px',
+                                            }}
+                                        >
+                                            {item.icon_url ? (
+                                                <img
+                                                    style={{ height: '50px', width: '50px' }}
+                                                    src={item.icon_url}
+                                                />
+                                            ) : (
+                                                <QuestionOutlined />
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            }
-                        >
-                            <Card.Meta
-                                title={it.name}
-                                description={`Add a new ${it.name} activity`}
-                            />
-                        </Card>
-                    </Link>
-                ))}
-            </div>
+                                }
+                            >
+                                <Card.Meta
+                                    title={item.name}
+                                    style={{height: '100%'}}
+                                    description={`Add a new ${item.name} activity`}
+                                />
+                            </Card>
+                        </Link>
+                    </List.Item>
+                )} />
         </div>
     )
 }
