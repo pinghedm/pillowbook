@@ -16,6 +16,7 @@ services:
       DEBUG: 1
       SECRET_KEY: django-insecure-p3hy51!%-z$y!iewkb@iuuah%o46z%00xtk&kywl75$^u0_d4d
       SESSION_COOKIE_SECURE: 0
+      COMMIT_HASH:
 
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     entrypoint: scripts/entrypoint.sh

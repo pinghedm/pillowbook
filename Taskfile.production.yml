@@ -8,15 +8,21 @@ tasks:
       - DOCKER_HOST= task pip-compile
 
   build_fe:
+    vars:
+      GIT_HASH:
+        sh: git rev-parse --short HEAD
     cmds:
-      - docker compose -f docker-compose.production.yml run --build frontend
+      - VITE_COMMIT_HASH={{.GIT_HASH}} docker compose -f docker-compose.production.yml run --build frontend
 
   gunicorn:
     dotenv: ['backend/.env.prod']
     desc: run backend daemon
+    vars:
+      GIT_HASH:
+        sh: git rev-parse --short HEAD
     cmds:
       - docker compose -f docker-compose.production.yml run --build backend python manage.py collectstatic --no-input
-      - docker compose -f docker-compose.production.yml up --no-deps --build -d backend
+      - COMMIT_HASH={{.GIT_HASH}} docker compose -f docker-compose.production.yml up --no-deps --build -d backend
     deps: [pip-compile]
 
   shell:
@@ -26,6 +32,7 @@ tasks:
     deps: [pip-compile]
   caddy:
     desc: run caddy
+
     cmds:
       - task: build_fe
       - docker compose -f docker-compose.production.yml up --build -d caddy

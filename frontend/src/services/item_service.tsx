@@ -24,6 +24,7 @@ export interface Item {
     icon_url: string
     item_type_icon_url: string
     pinned: boolean
+    item_type_name: string
 }
 
 export interface ItemDetail {

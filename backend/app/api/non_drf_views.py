@@ -1,3 +1,4 @@
+from os import environ
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -82,3 +83,8 @@ def update_item_icon(request: HttpRequest, item_token: str) -> HttpResponse:
     item.icon = file
     item.save()
     return HttpResponse()
+
+
+@login_required
+def version(request: HttpRequest):
+    return JsonResponse({"version": environ.get("COMMIT_HASH", "local")})
