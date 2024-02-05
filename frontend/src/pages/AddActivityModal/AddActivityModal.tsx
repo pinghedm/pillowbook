@@ -37,10 +37,7 @@ const AddActivityModal = ({ closeModal }: AddActivityModalProps) => {
                                     >
                                         <div
                                             style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
+                                                textAlign: 'center',
                                                 marginTop: '10px',
                                                 marginBottom: '10px',
                                             }}
