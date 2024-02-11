@@ -1,18 +1,38 @@
-import { Alert, InputNumber, Layout, Menu, Typography } from 'antd'
-import React, { useMemo, useState } from 'react'
+import { Menu } from 'antd'
+import { useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { useUpdateUserSettings, useUserSettings } from 'services/user_service'
+import styled from 'styled-components'
 
 export interface ProfileProps {}
+
+const ProfileDiv = styled.div`
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%;
+    gap: 2em;
+
+    @media screen and (max-width: 412px){
+        height: auto;
+    }
+`
+const ProfileSider = styled.aside`
+    background-color: white;
+    flex: 1 1 200px;
+    min-width: 200px;
+    height: auto;
+`
+const ProfileMain = styled.main`
+    flex: 1 1 70%;
+`
 
 const Profile = ({}: ProfileProps) => {
     const navigate = useNavigate()
     const location = useLocation()
     const tab = useMemo(() => location.pathname.split('/').at(-1) ?? 'basics', [location])
     return (
-        <Layout style={{ height: '100%', width: '100%' }}>
-            {/*<Typography.Title level={3}>Profile</Typography.Title>*/}
-            <Layout.Sider style={{ backgroundColor: 'white', marginRight: '10px' }}>
+        
+        <ProfileDiv>
+            <ProfileSider>
                 <Menu
                     defaultSelectedKeys={[tab]}
                     mode="inline"
@@ -26,11 +46,11 @@ const Profile = ({}: ProfileProps) => {
                         navigate({ pathname: key })
                     }}
                 />
-            </Layout.Sider>
-            <Layout.Content>
+            </ProfileSider>
+            <ProfileMain>
                 <Outlet />
-            </Layout.Content>
-        </Layout>
+            </ProfileMain>
+        </ProfileDiv>
     )
 }
 

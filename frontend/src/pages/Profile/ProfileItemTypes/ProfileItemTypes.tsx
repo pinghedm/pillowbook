@@ -1,11 +1,10 @@
 import { DeleteOutlined, PlusOutlined, QuestionOutlined, UploadOutlined } from '@ant-design/icons'
-import { useQueryClient } from '@tanstack/react-query'
 import {
-    Alert,
     AutoComplete,
     Button,
     Card,
     Divider,
+    Flex,
     Input,
     Modal,
     Popconfirm,
@@ -17,7 +16,7 @@ import {
 } from 'antd'
 import { RcFile } from 'antd/es/upload'
 import axios from 'axios'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useItems } from 'services/item_service'
 import {
     FORM_FIELD_TYPES,
@@ -30,8 +29,46 @@ import {
 } from 'services/item_type_service'
 import { capitalizeWords, readCookie } from 'services/utils'
 import slugify from 'slugify'
+import styled from 'styled-components'
 
 // TODO dooo these need to be separate components?
+
+const FormRow = styled(Flex)`
+    margin-bottom: 5px;
+    align-items: center;
+    .ant-input, .ant-select, > div{
+        flex: 1 0 100%;
+    }
+`
+const IconUploadWrapper = styled(Flex)`
+
+    .uploader {
+        text-align: center;
+
+        .ant-upload * { 
+            cursor: pointer !important; 
+        }
+    }
+
+    .anticon {
+        min-width: 50px;
+        text-align: center;
+
+        svg {
+            margin: auto;
+        }
+    }
+
+    @media screen and (max-width: 412px) {
+        .anticon, .image-icon {
+            flex: 1 1 20%;
+        }
+
+        .uploader {
+            flex: 1 1 80%;
+        }
+    }
+`
 
 const NewItemTypeModal = ({
     open,
@@ -56,37 +93,24 @@ const NewItemTypeModal = ({
             maskClosable
             footer={null}
             closable={false}
-            width="75vw"
             destroyOnClose
+            width={'50vw'}
         >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '5px',
-                        alignItems: 'center',
-                    }}
-                >
-                    Slug:{' '}
+            <Typography.Title level={3}>Add Item Type</Typography.Title>
+            <Flex vertical gap={5}>
+                <FormRow gap={5} wrap='wrap'>
+                    <label>Slug:{' '}</label>
                     <Input
-                        style={{ maxWidth: '300px' }}
+                        style={{ maxWidth: '500px' }}
                         placeholder="New Item Type Slug"
                         disabled
                         value={slug}
                     />
-                </div>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '5px',
-                        alignItems: 'center',
-                    }}
-                >
-                    Name:{' '}
+                </FormRow>
+                <FormRow gap={5} wrap='wrap'>
+                    <label>Name:{' '}</label>
                     <Input
-                        style={{ maxWidth: '300px' }}
+                        style={{ maxWidth: '500px' }}
                         placeholder="New Item Type Name"
                         autoFocus
                         value={name}
@@ -94,19 +118,12 @@ const NewItemTypeModal = ({
                             setName(e.target.value)
                         }}
                     />
-                </div>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '5px',
-                        alignItems: 'center',
-                    }}
-                >
-                    Parent:
+                </FormRow>
+                <FormRow gap={5} wrap='wrap'>
+                    <label>Parent:</label>
                     <AutoComplete
                         options={(itemTypes ?? []).map(it => ({ value: it.slug, label: it.name }))}
-                        style={{ width: '300px' }}
+                        style={{ maxWidth: '500px' }}
                         value={parentSlug}
                         onChange={val => {
                             setParentSlug(val)
@@ -116,16 +133,9 @@ const NewItemTypeModal = ({
                         }}
                         allowClear
                     />
-                </div>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: '5px',
-                        alignItems: 'center',
-                    }}
-                >
-                    Icon:
+                </FormRow>
+                <FormRow gap={5} wrap='wrap'>
+                    <label>Icon:</label>
                     <Upload
                         accept=".png, .jpg, .svg, .gif"
                         maxCount={1}
@@ -141,7 +151,7 @@ const NewItemTypeModal = ({
                     >
                         <Button icon={<UploadOutlined />} />
                     </Upload>
-                </div>
+                </FormRow>
                 <div>
                     <Button
                         type="primary"
@@ -165,7 +175,7 @@ const NewItemTypeModal = ({
                         Create
                     </Button>
                 </div>
-            </div>
+            </Flex>
         </Modal>
     )
 }
@@ -229,23 +239,14 @@ const EditItemTypeModal = ({
             onCancel={onCancel}
             maskClosable
             footer={null}
-            closable={false}
-            width="75vw"
+            closable={true}
             destroyOnClose
+            width={'50vw'}
         >
             <Typography.Title level={3}>Editing {itemType.name}</Typography.Title>
-            <div style={{ height: '40px', width: '100%', marginBottom: '10px' }}>
-                {updateItemTypeMutation.isPending ? (
-                    <Alert
-                        type="success"
-                        message="Saving..."
-                    />
-                ) : null}
-            </div>
-            <div
-                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
-            >
-                Display Name:
+            
+            <FormRow gap={5} wrap='wrap'>
+                <label>Display Name:</label>
                 <Input
                     style={{ maxWidth: '500px' }}
                     defaultValue={itemType.name}
@@ -257,11 +258,9 @@ const EditItemTypeModal = ({
                         })
                     }}
                 />
-            </div>
-            <div
-                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
-            >
-                Item Name Schema:
+            </FormRow>
+            <FormRow gap={5} wrap='wrap'>
+                <label>Item Name Schema:</label>
                 <Input
                     style={{ maxWidth: '500px' }}
                     defaultValue={itemType.name_schema}
@@ -272,28 +271,19 @@ const EditItemTypeModal = ({
                         })
                     }}
                 />
-            </div>
-            <div
-                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
-            >
-                Item Name Schema Example
+            </FormRow>
+            <FormRow gap={5} wrap='wrap'>
+                <label>Item Name Schema Example:</label>
                 <Input
                     style={{ maxWidth: '500px' }}
                     readOnly
                     value={(exampleItems?.results?.[0] ?? { name: '[No Items Found]' }).name}
                 />
-            </div>
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '5px',
-                    alignItems: 'center',
-                }}
-            >
-                Parent:
+            </FormRow>
+            <FormRow gap={5} wrap='wrap'>
+                <label>Parent:</label>
                 <Select
-                    style={{ width: '300px' }}
+                    style={{ maxWidth: '500px' }}
                     popupMatchSelectWidth={false}
                     value={parentSlug}
                     options={(itemTypes ?? [])
@@ -310,42 +300,48 @@ const EditItemTypeModal = ({
                     allowClear
                     showSearch
                 />
-            </div>
-            <div
-                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
-            >
-                Icon:
-                {itemType.icon_url ? (
-                    <img
-                        style={{ height: '50px', width: '50px' }}
-                        src={itemType.icon_url}
-                    />
-                ) : (
-                    <QuestionOutlined />
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <Upload
-                        headers={{ 'X-CSRFToken': readCookie(axios.defaults.xsrfCookieName) ?? '' }}
-                        action={iconUploadURL}
-                        withCredentials
-                        style={{ width: '300px' }}
-                        accept=".png, .jpg, .svg, .gif"
-                        maxCount={1}
-                        showUploadList={{ showPreviewIcon: false }}
-                        listType="picture-card"
+            </FormRow>
+            <FormRow gap={5} wrap='wrap'>
+                <label>Icon:</label>
+                <IconUploadWrapper gap={10} align='center'>
+                    {itemType.icon_url ? (
+                        <div className='icon-image'>
+                            <img
+                                style={{ height: '50px', width: '50px' }}
+                                src={itemType.icon_url}
+                            />
+                        </div>
+                    ) : (
+                        <QuestionOutlined />
+                    )}
+                    <Flex 
+                        className='uploader'
+                        gap={5} 
+                        vertical
                     >
-                        <Button icon={<UploadOutlined />}> Change Icon</Button>
-                    </Upload>
-                    <Button
-                        onClick={() => {
-                            axios.delete(iconUploadURL)
-                        }}
-                        disabled={!itemType.icon_url}
-                    >
-                        Remove Icon
-                    </Button>
-                </div>
-            </div>
+                        <Upload
+                            headers={{ 'X-CSRFToken': readCookie(axios.defaults.xsrfCookieName) ?? '' }}
+                            action={iconUploadURL}
+                            withCredentials
+                            style={{ width: '300px' }}
+                            accept=".png, .jpg, .svg, .gif"
+                            maxCount={1}
+                            showUploadList={{ showPreviewIcon: false }}
+                            listType="picture-card"
+                        >
+                            <button style={{ border: 0, background: 'none' }} type='button'> <UploadOutlined style={{margin: 'auto'}}/><div>Change Icon</div></button>
+                        </Upload>
+                        <Button
+                            onClick={() => {
+                                axios.delete(iconUploadURL)
+                            }}
+                            disabled={!itemType.icon_url}
+                        >
+                            Remove Icon
+                        </Button>
+                    </Flex>
+                </IconUploadWrapper>
+            </FormRow>
             <div>
                 <Typography.Title level={4}>Fields</Typography.Title>
                 {Object.entries(formFieldProperties)
@@ -359,7 +355,6 @@ const EditItemTypeModal = ({
                                     gap: '15px',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
-                                    maxWidth: '50%',
                                 }}
                             >
                                 <div
@@ -398,17 +393,10 @@ const EditItemTypeModal = ({
                                         flex: 1,
                                     }}
                                 >
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'row', // TODO: probably change to column on mobile
-                                            gap: '5px',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <div>Display Name:</div>
+                                    <FormRow gap={5} wrap='wrap'>
+                                        <label>Display Name:</label>
                                         <Input
-                                            style={{ maxWidth: '500px', flex: 1 }}
+                                            style={{ maxWidth: '500px' }}
                                             defaultValue={typeof v === 'boolean' ? '' : v.title}
                                             onBlur={e => {
                                                 const newProperties = {
@@ -429,18 +417,11 @@ const EditItemTypeModal = ({
                                                 })
                                             }}
                                         />
-                                    </div>
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            gap: '5px',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <div>Field Type:</div>
+                                    </FormRow>
+                                    <FormRow gap={5} wrap='wrap'>
+                                        <label>Field Type:</label>
                                         <Select
-                                            style={{ maxWidth: '500px', flex: 1 }}
+                                            style={{ maxWidth: '500px'}}
                                             options={FORM_FIELD_TYPES.map(fft => ({
                                                 key: fft,
                                                 value: fft,
@@ -469,16 +450,9 @@ const EditItemTypeModal = ({
                                             }}
                                             popupMatchSelectWidth={false}
                                         />
-                                    </div>
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            gap: '5px',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <div>Required:</div>
+                                    </FormRow>
+                                    <FormRow gap={5} wrap='wrap'>
+                                        <label>Required:</label>
                                         <Switch
                                             checked={itemType.item_schema?.required?.includes(k)}
                                             onChange={checked => {
@@ -504,7 +478,7 @@ const EditItemTypeModal = ({
                                                 })
                                             }}
                                         />
-                                    </div>
+                                    </FormRow>
                                 </div>
                             </div>
                             <Divider />
@@ -684,16 +658,8 @@ const ProfileItemTypes = ({}: ProfileItemTypesProps) => {
                     setEditingSlug(slug)
                 }}
             />
-            Item Types
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '5px',
-                    marginTop: '5px',
-                    flexWrap: 'wrap',
-                }}
-            >
+            <Typography.Title level={4}>Item Types</Typography.Title>
+            <Flex gap={5} wrap='wrap' id='item-type-list'>
                 {(itemTypes ?? [])
                     .sort((it1, it2) => it1.slug.localeCompare(it2.slug))
                     .map(it => (
@@ -771,7 +737,7 @@ const ProfileItemTypes = ({}: ProfileItemTypesProps) => {
                         description={`Add New Type`}
                     />
                 </Card>
-            </div>
+            </Flex>
         </div>
     )
 }
