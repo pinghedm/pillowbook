@@ -32,6 +32,21 @@
     text-overflow: ellipsis;
 }
 
+#item-type-list .ant-card {
+  flex: 0 1 12.5%;
+  min-width: 200px;;
+}
+
+.ant-card-meta-title {
+  white-space: pre-line !important;
+}
+
+@media screen and (max-width: 768px) {
+
+  #item-type-list .ant-card {
+    flex: 1 1 calc(50% - 5px); /* 5px is the gap size */
+  }
+}
 @media screen and (max-width: 412px) {
 
   .ant-modal {
@@ -39,7 +54,7 @@
   }
 
   #item-type-list .ant-card {
-    flex: 1 1 49%;
+    flex: 1 1 200px;
   }
 
   #home-modules-list .ant-card {

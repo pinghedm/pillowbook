@@ -20,9 +20,8 @@ const AddActivityModal = ({ closeModal }: AddActivityModalProps) => {
                 }}
                 dataSource={itemTypes ?? []}
                 renderItem={(item) => (
-                    <List.Item>
+                    <List.Item key={item.slug}>
                         <Link
-                            key={item.slug}
                             to={{ pathname: `/activities/${item.slug}` }}
                         >
                             <Card
