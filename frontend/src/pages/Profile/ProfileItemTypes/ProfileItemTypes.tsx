@@ -1,4 +1,5 @@
 import { DeleteOutlined, PlusOutlined, QuestionOutlined, UploadOutlined } from '@ant-design/icons'
+import { useQueryClient } from '@tanstack/react-query'
 import {
     AutoComplete,
     Button,
@@ -31,22 +32,21 @@ import { capitalizeWords, readCookie } from 'services/utils'
 import slugify from 'slugify'
 import styled from 'styled-components'
 
-// TODO dooo these need to be separate components?
-
 const FormRow = styled(Flex)`
     margin-bottom: 5px;
     align-items: center;
-    .ant-input, .ant-select, > div{
+    .ant-input,
+    .ant-select,
+    > div {
         flex: 1 0 100%;
     }
 `
 const IconUploadWrapper = styled(Flex)`
-
     .uploader {
         text-align: center;
 
-        .ant-upload * { 
-            cursor: pointer !important; 
+        .ant-upload * {
+            cursor: pointer !important;
         }
     }
 
@@ -60,7 +60,8 @@ const IconUploadWrapper = styled(Flex)`
     }
 
     @media screen and (max-width: 412px) {
-        .anticon, .image-icon {
+        .anticon,
+        .image-icon {
             flex: 1 1 20%;
         }
 
@@ -70,6 +71,7 @@ const IconUploadWrapper = styled(Flex)`
     }
 `
 
+// TODO dooo these need to be separate components?
 const NewItemTypeModal = ({
     open,
     onCancel,
@@ -97,9 +99,15 @@ const NewItemTypeModal = ({
             width={'50vw'}
         >
             <Typography.Title level={3}>Add Item Type</Typography.Title>
-            <Flex vertical gap={5}>
-                <FormRow gap={5} wrap='wrap'>
-                    <label>Slug:{' '}</label>
+            <Flex
+                vertical
+                gap={5}
+            >
+                <FormRow
+                    gap={5}
+                    wrap="wrap"
+                >
+                    <label>Slug: </label>
                     <Input
                         style={{ maxWidth: '500px' }}
                         placeholder="New Item Type Slug"
@@ -107,8 +115,11 @@ const NewItemTypeModal = ({
                         value={slug}
                     />
                 </FormRow>
-                <FormRow gap={5} wrap='wrap'>
-                    <label>Name:{' '}</label>
+                <FormRow
+                    gap={5}
+                    wrap="wrap"
+                >
+                    <label>Name: </label>
                     <Input
                         style={{ maxWidth: '500px' }}
                         placeholder="New Item Type Name"
@@ -119,7 +130,10 @@ const NewItemTypeModal = ({
                         }}
                     />
                 </FormRow>
-                <FormRow gap={5} wrap='wrap'>
+                <FormRow
+                    gap={5}
+                    wrap="wrap"
+                >
                     <label>Parent:</label>
                     <AutoComplete
                         options={(itemTypes ?? []).map(it => ({ value: it.slug, label: it.name }))}
@@ -134,7 +148,10 @@ const NewItemTypeModal = ({
                         allowClear
                     />
                 </FormRow>
-                <FormRow gap={5} wrap='wrap'>
+                <FormRow
+                    gap={5}
+                    wrap="wrap"
+                >
                     <label>Icon:</label>
                     <Upload
                         accept=".png, .jpg, .svg, .gif"
@@ -229,6 +246,7 @@ const EditItemTypeModal = ({
         { itemTypes: [itemSlug ?? ''] },
         undefined,
     )
+    const queryClient = useQueryClient()
 
     if (!itemType) {
         return null
@@ -244,8 +262,11 @@ const EditItemTypeModal = ({
             width={'50vw'}
         >
             <Typography.Title level={3}>Editing {itemType.name}</Typography.Title>
-            
-            <FormRow gap={5} wrap='wrap'>
+
+            <FormRow
+                gap={5}
+                wrap="wrap"
+            >
                 <label>Display Name:</label>
                 <Input
                     style={{ maxWidth: '500px' }}
@@ -259,7 +280,10 @@ const EditItemTypeModal = ({
                     }}
                 />
             </FormRow>
-            <FormRow gap={5} wrap='wrap'>
+            <FormRow
+                gap={5}
+                wrap="wrap"
+            >
                 <label>Item Name Schema:</label>
                 <Input
                     style={{ maxWidth: '500px' }}
@@ -272,7 +296,10 @@ const EditItemTypeModal = ({
                     }}
                 />
             </FormRow>
-            <FormRow gap={5} wrap='wrap'>
+            <FormRow
+                gap={5}
+                wrap="wrap"
+            >
                 <label>Item Name Schema Example:</label>
                 <Input
                     style={{ maxWidth: '500px' }}
@@ -280,7 +307,10 @@ const EditItemTypeModal = ({
                     value={(exampleItems?.results?.[0] ?? { name: '[No Items Found]' }).name}
                 />
             </FormRow>
-            <FormRow gap={5} wrap='wrap'>
+            <FormRow
+                gap={5}
+                wrap="wrap"
+            >
                 <label>Parent:</label>
                 <Select
                     style={{ maxWidth: '500px' }}
@@ -301,11 +331,17 @@ const EditItemTypeModal = ({
                     showSearch
                 />
             </FormRow>
-            <FormRow gap={5} wrap='wrap'>
+            <FormRow
+                gap={5}
+                wrap="wrap"
+            >
                 <label>Icon:</label>
-                <IconUploadWrapper gap={10} align='center'>
+                <IconUploadWrapper
+                    gap={10}
+                    align="center"
+                >
                     {itemType.icon_url ? (
-                        <div className='icon-image'>
+                        <div className="icon-image">
                             <img
                                 style={{ height: '50px', width: '50px' }}
                                 src={itemType.icon_url}
@@ -314,13 +350,15 @@ const EditItemTypeModal = ({
                     ) : (
                         <QuestionOutlined />
                     )}
-                    <Flex 
-                        className='uploader'
-                        gap={5} 
+                    <Flex
+                        className="uploader"
+                        gap={5}
                         vertical
                     >
                         <Upload
-                            headers={{ 'X-CSRFToken': readCookie(axios.defaults.xsrfCookieName) ?? '' }}
+                            headers={{
+                                'X-CSRFToken': readCookie(axios.defaults.xsrfCookieName) ?? '',
+                            }}
                             action={iconUploadURL}
                             withCredentials
                             style={{ width: '300px' }}
@@ -328,12 +366,19 @@ const EditItemTypeModal = ({
                             maxCount={1}
                             showUploadList={{ showPreviewIcon: false }}
                             listType="picture-card"
+                            onChange={() => {
+                                queryClient.invalidateQueries({ queryKey: ['itemTypes'] })
+                            }}
                         >
-                            <button style={{ border: 0, background: 'none' }} type='button'> <UploadOutlined style={{margin: 'auto'}}/><div>Change Icon</div></button>
+                            <Button style={{ border: 0, background: 'none' }}>
+                                <UploadOutlined style={{ margin: 'auto' }} />
+                                <div>Change Icon</div>
+                            </Button>
                         </Upload>
                         <Button
                             onClick={() => {
                                 axios.delete(iconUploadURL)
+                                queryClient.invalidateQueries({ queryKey: ['itemTypes'] })
                             }}
                             disabled={!itemType.icon_url}
                         >
@@ -393,7 +438,10 @@ const EditItemTypeModal = ({
                                         flex: 1,
                                     }}
                                 >
-                                    <FormRow gap={5} wrap='wrap'>
+                                    <FormRow
+                                        gap={5}
+                                        wrap="wrap"
+                                    >
                                         <label>Display Name:</label>
                                         <Input
                                             style={{ maxWidth: '500px' }}
@@ -418,10 +466,13 @@ const EditItemTypeModal = ({
                                             }}
                                         />
                                     </FormRow>
-                                    <FormRow gap={5} wrap='wrap'>
+                                    <FormRow
+                                        gap={5}
+                                        wrap="wrap"
+                                    >
                                         <label>Field Type:</label>
                                         <Select
-                                            style={{ maxWidth: '500px'}}
+                                            style={{ maxWidth: '500px' }}
                                             options={FORM_FIELD_TYPES.map(fft => ({
                                                 key: fft,
                                                 value: fft,
@@ -451,7 +502,10 @@ const EditItemTypeModal = ({
                                             popupMatchSelectWidth={false}
                                         />
                                     </FormRow>
-                                    <FormRow gap={5} wrap='wrap'>
+                                    <FormRow
+                                        gap={5}
+                                        wrap="wrap"
+                                    >
                                         <label>Required:</label>
                                         <Switch
                                             checked={itemType.item_schema?.required?.includes(k)}
@@ -659,7 +713,11 @@ const ProfileItemTypes = ({}: ProfileItemTypesProps) => {
                 }}
             />
             <Typography.Title level={4}>Item Types</Typography.Title>
-            <Flex gap={5} wrap='wrap' id='item-type-list'>
+            <Flex
+                gap={5}
+                wrap="wrap"
+                id="item-type-list"
+            >
                 {(itemTypes ?? [])
                     .sort((it1, it2) => it1.slug.localeCompare(it2.slug))
                     .map(it => (
@@ -692,7 +750,9 @@ const ProfileItemTypes = ({}: ProfileItemTypesProps) => {
                                                 src={it.icon_url}
                                             />
                                         ) : (
-                                            <QuestionOutlined />
+                                            <QuestionOutlined
+                                                style={{ height: '50px', width: '50px' }}
+                                            />
                                         )}
                                     </div>
                                 </div>
@@ -727,7 +787,7 @@ const ProfileItemTypes = ({}: ProfileItemTypesProps) => {
                                     marginBottom: '10px',
                                 }}
                             >
-                                <PlusOutlined />
+                                <PlusOutlined style={{ height: '50px', width: '50px' }} />
                             </div>
                         </div>
                     }

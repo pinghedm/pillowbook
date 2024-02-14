@@ -75,9 +75,10 @@ const App = () => {
 const LoggedInRoot = () => {
     const location = useLocation()
     const selectedKey = useMemo(
-        () => location.pathname.split('/')?.filter(p => !!p)?.[0] || 'home',
+        () => location.pathname.split('/')?.filter(p => !!p)?.[0],
         [location],
     )
+
     const navigate = useNavigate()
     const logoutMutation = useLogout()
     const { data: itemTypes } = useItemTypes()
@@ -162,10 +163,11 @@ const LoggedInRoot = () => {
                         onClick={({ key }) => {
                             navigate({ pathname: key })
                         }}
-                        defaultSelectedKeys={[selectedKey]}
+                        selectedKeys={selectedKey ? [selectedKey] : undefined}
                     />
                 </div>
                 <Menu
+                    selectedKeys={selectedKey ? [selectedKey] : undefined}
                     expandIcon={<DownOutlined />}
                     theme="dark"
                     onClick={e => {
@@ -210,7 +212,7 @@ const LoggedInRoot = () => {
                     trigger="click"
                     type="primary"
                     icon={<PlusOutlined />}
-                    className='quick-add-menu'
+                    className="quick-add-menu"
                 >
                     {itemTypesInQuickMenu.map(it => (
                         <FloatButton
