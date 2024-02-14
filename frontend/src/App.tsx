@@ -210,6 +210,7 @@ const LoggedInRoot = () => {
                     trigger="click"
                     type="primary"
                     icon={<PlusOutlined />}
+                    className='quick-add-menu'
                 >
                     {itemTypesInQuickMenu.map(it => (
                         <FloatButton
@@ -217,7 +218,7 @@ const LoggedInRoot = () => {
                             icon={
                                 it.icon_url ? (
                                     <img
-                                        style={{ height: '15px', width: '15px' }}
+                                        style={{ height: '18px', width: '18px' }}
                                         src={it.icon_url}
                                     />
                                 ) : (
@@ -227,7 +228,6 @@ const LoggedInRoot = () => {
                             description={it.name}
                             tooltip={`Add New ${it.name} Activity`}
                             href={`/activities/${it.slug}`}
-                            shape="square"
                         />
                     ))}
 

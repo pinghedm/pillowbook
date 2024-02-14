@@ -8,6 +8,7 @@ import { usePagedResultData } from 'services/utils'
 import { DateTime } from 'luxon'
 import { useUserSettings } from 'services/user_service'
 import { ActivityListItem, ItemListItem } from 'components/styled_list_items'
+import { CheckCircleOutlined, FileAddOutlined, FileDoneOutlined } from '@ant-design/icons'
 
 const HomePageRecentItems = () => {
     const {
@@ -16,7 +17,6 @@ const HomePageRecentItems = () => {
         fetchStatus: recentsStatus,
     } = useItems(1, 5, undefined, undefined, { key: 'created', order: 'descend' })
     const { data: recents } = usePagedResultData(recentsPagedResult)
-    const navigate = useNavigate()
 
     
 
@@ -34,6 +34,8 @@ const HomePageRecentItems = () => {
                         path={`/items/${item.token}`} 
                         actions = {[<Button
                             type="primary"
+                            icon={<FileAddOutlined />}
+                            className='home-button'
                             href={`/activities/${item.item_type}/${item.token}`}
                             onClick={e => {e.stopPropagation()}}
                         >
@@ -68,6 +70,8 @@ const HomePagePendingActivities = () => {
                         actions={[
                             <Button
                             type="primary"
+                            icon={<CheckCircleOutlined />}
+                            className='home-button'
                             onClick={(e) => {
                                 e.preventDefault()
                                 activityUpdateMutation.mutate({
@@ -110,6 +114,8 @@ const HomePageInProgressActivities = () => {
                         actions={[
                             <Button
                             type="primary"
+                            icon={<FileDoneOutlined />}
+                            className='home-button'
                             onClick={(e) => {
                                 e.preventDefault()
                                 activityUpdateMutation.mutate({
@@ -150,6 +156,8 @@ const HomePagePinnedItems = () => {
                         path={`/items/${item.token}`} 
                         actions = {[<Button
                             type="primary"
+                            icon={<FileAddOutlined />}
+                            className='home-button'
                             href={`/activities/${item.item_type}/${item.token}`}
                             onClick={e => { e.stopPropagation() }}
                         >

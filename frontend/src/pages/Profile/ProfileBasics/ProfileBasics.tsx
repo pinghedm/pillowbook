@@ -1,5 +1,5 @@
-import { Alert, Button, Divider, InputNumber, Switch } from 'antd'
-import React, { useState } from 'react'
+import { Button, Divider, InputNumber, Switch, Typography } from 'antd'
+import { useState } from 'react'
 import { useItemTypes } from 'services/item_type_service'
 import { useUpdateUserSettings, useUserSettings } from 'services/user_service'
 
@@ -8,18 +8,11 @@ export interface ProfileBasicsProps {}
 const ProfileBasics = ({}: ProfileBasicsProps) => {
     const { data: userSettings } = useUserSettings()
     const userSettingsMutation = useUpdateUserSettings()
-    const [saving, setSaving] = useState(false)
+    const [saved, setSaved] = useState(false)
     const { data: itemTypes } = useItemTypes()
     return (
         <>
-            <div style={{ height: '40px', width: '100%', marginBottom: '10px' }}>
-                {saving ? (
-                    <Alert
-                        type="success"
-                        message="Saving..."
-                    />
-                ) : null}
-            </div>
+            <Typography.Title level={4}>Basic Settings</Typography.Title>
             <div
                 style={{
                     display: 'flex',
@@ -38,14 +31,6 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                                 ...userSettings,
                                 ratingMax: Number(value),
                             },
-                            {
-                                onSuccess: () => {
-                                    setSaving(true)
-                                    setTimeout(() => {
-                                        setSaving(false)
-                                    }, 1000)
-                                },
-                            },
                         )
                     }}
                     onBlur={e => {
@@ -53,14 +38,6 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                             {
                                 ...userSettings,
                                 ratingMax: Number(e.target.value),
-                            },
-                            {
-                                onSuccess: () => {
-                                    setSaving(true)
-                                    setTimeout(() => {
-                                        setSaving(false)
-                                    }, 1000)
-                                },
                             },
                         )
                     }}
@@ -110,16 +87,10 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                 <Switch
                     checked={userSettings?.use24HrTime ?? true}
                     onChange={checked => {
-                        setSaving(true)
                         userSettingsMutation.mutate(
                             {
                                 ...userSettings,
                                 use24HrTime: checked,
-                            },
-                            {
-                                onSuccess: () => {
-                                    setSaving(false)
-                                },
                             },
                         )
                     }}

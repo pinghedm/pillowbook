@@ -27,13 +27,27 @@ const StyledListItem = styled(List.Item)`
         transition: all 0.15s ease-in;
     }
 
+
+    @media (max-width: 412px) {
+        .ant-btn-primary.home-button  {
+            > span:not(.ant-btn-icon) {
+                display: none;
+            }
+
+            .ant-btn-icon{ 
+                margin-inline-end: 0;
+            }
+        }
+    }
+    
     & .ant-list-item-meta-content {
         align-self: center;
     }
 
     & .ant-list-item-meta-avatar {
         flex-basis: 10%;
-        min-width: 100px;
+        min-width: 70px;
+        text-align: center;
     }
 `
 const StyledAvatar = styled.div`
@@ -46,8 +60,19 @@ const StyledDescription = styled.div`
     margin-top: auto;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 5px;
     align-items: center;
+
+    .complete {
+        border-right: 1px solid lightgray;
+        padding-right: 5px;
+        margin-right: 5px;
+
+        @media (max-width: 412px) {
+            border: none;
+        }
+    }
 `
 
 export const ItemListItem = ({ item, path, actions, extras }: ItemListItemProps) => {
@@ -107,11 +132,7 @@ export const ActivityListItem = ({ item, path, actions, extras }: ActivityListIt
                             {item.finished ? (
                                 <Typography.Text
                                     type="success"
-                                    style={{
-                                        borderRight: '1px solid lightgray',
-                                        paddingRight: '5px',
-                                        marginRight: '5px',
-                                    }}
+                                    className='complete'
                                 >
                                     Completed
                                 </Typography.Text>
