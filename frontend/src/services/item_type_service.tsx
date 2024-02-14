@@ -16,6 +16,7 @@ export interface ItemTypeDetail extends ItemType {
     auto_complete_config: Record<string, never>
     activity_schema: Record<string, any>
     parent_slug: string
+    plugin_config: Record<string, any>
 }
 
 export const useItemTypes = () => {

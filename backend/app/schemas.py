@@ -3,7 +3,7 @@ default_item_types = [
         "slug": "book-series",
         "name": "Book Series",
         "name_schema": "{{title}}",
-        "auto_complete_config": {},
+        "plugin_config": {},
         "item_schema": {
             "type": "object",
             "properties": {
@@ -20,7 +20,7 @@ default_item_types = [
         "slug": "book",
         "name": "Book",
         "name_schema": "{{title}}",
-        "auto_complete_config": {},
+        "plugin_config": {},
         "item_schema": {
             "type": "object",
             "properties": {
@@ -38,7 +38,7 @@ default_item_types = [
         "slug": "movie",
         "name": "Movie",
         "name_schema": "{{title}}",
-        "auto_complete_config": {},
+        "plugin_config": {},
         "item_schema": {
             "type": "object",
             "properties": {
@@ -55,7 +55,7 @@ default_item_types = [
         "slug": "video_game",
         "name": "Video Game",
         "name_schema": "{{title}}",
-        "auto_complete_config": {},
+        "plugin_config": {},
         "item_schema": {
             "type": "object",
             "properties": {

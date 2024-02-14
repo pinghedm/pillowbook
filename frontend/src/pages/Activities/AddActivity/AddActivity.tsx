@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-    ItemType,
     ItemTypeDetail,
     useItemType,
     useItemTypeAutoCompleteSuggestions,
@@ -31,10 +30,12 @@ import { useUserSettings } from 'services/user_service'
 import { DateTime } from 'luxon'
 import { PlusOutlined } from '@ant-design/icons'
 import AddItem from 'pages/AddItem/AddItem.lazy'
-import { useItem, useItems } from 'services/item_service'
+import { useItem, useItems, usePluginAutoComplete } from 'services/item_service'
 import { CheckboxWrapper, FormWrap, LabeledFormRow } from 'components/FormWrappers'
-import useDebounce from 'hooks/useDebounce'
+import useDebounce, { useDebounceMany } from 'hooks/useDebounce'
 import { usePagedResultData } from 'services/utils'
+import { useQueries } from '@tanstack/react-query'
+import { PLUGIN_CONFIG_TEMP } from 'pages/Profile/ProfileItemTypes/ProfileItemTypes'
 export interface AddActivityProps {}
 
 const itemDetailsIsExisting = (
@@ -158,7 +159,46 @@ const ItemSelection = ({
                 item_type: item.item_type,
             })
         }
-    }, [item, itemDetails, setItemDetails, createItem])
+    }, [item, itemDetails, setItemDetails, createItem, itemToken])
+
+    const [pluginPrimaryFieldValsByName, setPluginPrimaryFieldValsByName] = useState<
+        Record<string, string>
+    >({})
+    const debouncedPrimaryFieldValsByName = useDebounceMany(pluginPrimaryFieldValsByName)
+
+    const pluginAutocompleteVals = usePluginAutoComplete(
+        itemType?.slug ?? '',
+        debouncedPrimaryFieldValsByName,
+        Object.keys(itemType?.plugin_config ?? {}).length > 0,
+    )
+    console.log('qqqqq', itemDetails, itemType?.plugin_config, pluginPrimaryFieldValsByName)
+
+    useEffect(() => {
+        console.log(111)
+        if (!itemDetails || itemDetailsIsExisting(itemDetails)) {
+            return
+        }
+        const configuredPlugins = Object.keys(itemType?.plugin_config ?? {})
+        console.log(2222, configuredPlugins)
+        if (configuredPlugins.length === 0) {
+            return
+        }
+        console.log(3333)
+        const fieldNamesByPluginName = Object.fromEntries(
+            configuredPlugins.map(pluginName => [
+                pluginName,
+                itemType?.plugin_config?.[pluginName]?.[
+                    PLUGIN_CONFIG_TEMP[pluginName].primaryField
+                ],
+            ]),
+        )
+        const newPluginFieldsByName: Record<string, string> = {}
+        Object.entries(fieldNamesByPluginName).forEach(([pluginName, fieldName]) => {
+            newPluginFieldsByName[pluginName] = itemDetails.info[fieldName]
+        })
+        console.log(4444, newPluginFieldsByName)
+        setPluginPrimaryFieldValsByName(fvbn => ({ ...fvbn, ...newPluginFieldsByName }))
+    }, [itemDetails, itemType?.plugin_config])
 
     if (itemToken && !item) {
         return <Spin />
@@ -393,7 +433,7 @@ const AddActivity = ({}: AddActivityProps) => {
             )
         },
 
-        [createActivityMutation, newActivity],
+        [createActivityMutation, newActivity, userSettings?.ratingMax],
     )
 
     if (!itemType) {

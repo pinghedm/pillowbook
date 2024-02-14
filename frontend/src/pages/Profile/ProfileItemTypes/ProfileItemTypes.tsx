@@ -197,6 +197,17 @@ const NewItemTypeModal = ({
     )
 }
 
+export const PLUGIN_CONFIG_TEMP: Record<
+    string,
+    { displayName: string; primaryField: string; secondaryFields: string[] }
+> = {
+    goodreads: {
+        displayName: 'Goodreads',
+        primaryField: 'title',
+        secondaryFields: ['author'],
+    },
+}
+
 const EditItemTypeModal = ({
     itemSlug,
     onCancel,
@@ -388,6 +399,37 @@ const EditItemTypeModal = ({
                 </IconUploadWrapper>
             </FormRow>
             <div>
+                <Typography.Title level={4}>Plugins</Typography.Title>
+                <Select
+                    mode="multiple"
+                    style={{ width: '100%' }}
+                    placeholder={`Configure Plugins for ${itemType.name}`}
+                    popupMatchSelectWidth={false}
+                    options={Object.entries(PLUGIN_CONFIG_TEMP).map(([k, v]) => ({
+                        label: v.displayName,
+                        value: k,
+                    }))}
+                    value={Object.keys(itemType.plugin_config)}
+                    onChange={vals => {
+                        const pluginsToKeep = Object.fromEntries(
+                            Object.entries({ ...itemType.plugin_config }).filter(([k, v]) =>
+                                vals.includes(k),
+                            ),
+                        )
+                        const newPlugins = Object.fromEntries(
+                            vals
+                                .filter(v => !Object.keys(itemType.plugin_config).includes(v))
+                                .map(v => [v, {}]),
+                        )
+                        const newPluginConfig = { ...pluginsToKeep, ...newPlugins }
+                        updateItemTypeMutation.mutate({
+                            slug: itemType.slug,
+                            patch: { plugin_config: newPluginConfig },
+                        })
+                    }}
+                />
+            </div>
+            <div>
                 <Typography.Title level={4}>Fields</Typography.Title>
                 {Object.entries(formFieldProperties)
                     .filter(([k, v]) => typeof v !== 'boolean')
@@ -533,6 +575,60 @@ const EditItemTypeModal = ({
                                             }}
                                         />
                                     </FormRow>
+                                    {/*TODO: some kind of message about plugin not configured if primaryField not mapped*/}
+                                    {Object.entries(itemType.plugin_config).map(
+                                        ([pluginKey, pluginConfig]) => (
+                                            <div key={pluginKey}>
+                                                {PLUGIN_CONFIG_TEMP?.[pluginKey]?.displayName ??
+                                                    '??'}{' '}
+                                                Mapped Field:{' '}
+                                                <Select
+                                                    showSearch
+                                                    allowClear
+                                                    value={itemType.plugin_config?.[pluginKey]?.[k]}
+                                                    style={{ width: '250px' }}
+                                                    popupMatchSelectWidth={false}
+                                                    options={(
+                                                        [
+                                                            PLUGIN_CONFIG_TEMP?.[pluginKey]
+                                                                ?.primaryField,
+                                                            ...(PLUGIN_CONFIG_TEMP?.[pluginKey]
+                                                                ?.secondaryFields ?? []),
+                                                        ] ?? []
+                                                    )
+
+                                                        .filter(
+                                                            pluginField =>
+                                                                !Object.keys(
+                                                                    itemType.plugin_config[
+                                                                        pluginKey
+                                                                    ],
+                                                                ).includes(pluginField),
+                                                        )
+                                                        .map(pluginField => ({
+                                                            label: pluginField,
+                                                            value: pluginField,
+                                                        }))}
+                                                    onChange={val => {
+                                                        updateItemTypeMutation.mutate({
+                                                            slug: itemType.slug,
+                                                            patch: {
+                                                                plugin_config: {
+                                                                    ...itemType.plugin_config,
+                                                                    [pluginKey]: {
+                                                                        ...itemType.plugin_config[
+                                                                            pluginKey
+                                                                        ],
+                                                                        [k]: val,
+                                                                    },
+                                                                },
+                                                            },
+                                                        })
+                                                    }}
+                                                />
+                                            </div>
+                                        ),
+                                    )}
                                 </div>
                             </div>
                             <Divider />

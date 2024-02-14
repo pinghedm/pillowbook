@@ -28,6 +28,7 @@ class ItemTypeSerializer(ModelSerializer):
             "name_schema",
             "parent_slug",
             "icon_url",
+            "plugin_config",
         ]
 
 

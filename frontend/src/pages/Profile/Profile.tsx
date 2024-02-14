@@ -28,23 +28,41 @@ const ProfileMain = styled.main`
 
 const MOBILE_BREAK = 828
 
+const INSTALLED_PLUGINS_TEMP = [{ key: 'plugins/goodreads', label: 'Goodreads' }]
+
 const Profile = ({}: ProfileProps) => {
     const navigate = useNavigate()
     const location = useLocation()
     const tab = useMemo(() => location.pathname.split('/').at(-1) ?? 'basics', [location])
     const windowSize = useWindowSize()
+
+    const menuItems = useMemo(() => {
+        let base = [
+            { key: 'basics', label: 'Basics' },
+            { key: 'itemTypes', label: 'Item Types' },
+            { key: 'activityDefaults', label: 'Add Activity Defaults' },
+            { key: 'homeConfig', label: 'Home Screen Config' },
+        ]
+        const plugins = [
+            {
+                key: 'plugins',
+                label: 'Plugins',
+                type: 'group',
+                children: [...INSTALLED_PLUGINS_TEMP],
+            },
+        ]
+        if (INSTALLED_PLUGINS_TEMP.length) {
+            base = [...base, ...plugins]
+        }
+        return base
+    }, [])
     return (
         <ProfileDiv>
             <ProfileSider>
                 <Menu
                     defaultSelectedKeys={[tab]}
                     mode={(windowSize?.width ?? 0) > MOBILE_BREAK ? 'vertical' : 'horizontal'}
-                    items={[
-                        { key: 'basics', label: 'Basics' },
-                        { key: 'itemTypes', label: 'Item Types' },
-                        { key: 'activityDefaults', label: 'Add Activity Defaults' },
-                        { key: 'homeConfig', label: 'Home Screen Config' },
-                    ]}
+                    items={menuItems}
                     onClick={({ key }) => {
                         navigate({ pathname: key })
                     }}

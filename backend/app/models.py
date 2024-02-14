@@ -73,7 +73,7 @@ class ItemType(TimeStampedModel):
     user: "models.ForeignKey[User, User]" = models.ForeignKey(
         User, on_delete=models.CASCADE
     )
-    auto_complete_config = JSONField(
+    plugin_config = JSONField(
         default=dict, blank=True
     )  # this will be config, per field for autocompleting against external providers - eg checking goodreads for book titles
     parent_slug = models.SlugField(max_length=200, null=True, blank=True)

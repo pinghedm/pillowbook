@@ -1,5 +1,5 @@
 import { BookOutlined, LaptopOutlined, VideoCameraOutlined } from '@ant-design/icons'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { ReactNode } from 'react'
 import { PaginatedResult, getDjangoShapedFilters, getOrderingString } from './utils'
@@ -170,4 +170,28 @@ export const useCreateItem = () => {
         },
     })
     return mutation
+}
+
+export const usePluginAutoComplete = (
+    itemTypeSlug: string,
+    valsByPluginName: Record<string, string>,
+    enabled: boolean,
+) => {
+    const _get = async (itemTypeSlug: string, plugin: string, val: string) => {
+        const res = await axios.get<{ data: Record<string, string>[] }>(
+            '/api/plugin_complete/' + itemTypeSlug,
+            {
+                params: { query: val, plugin },
+            },
+        )
+        return { pluginName: plugin, data: res.data.data }
+    }
+    const queries = useQueries({
+        queries: Object.entries(valsByPluginName).map(([pluginName, val]) => ({
+            queryKey: [itemTypeSlug, pluginName, val],
+            queryFn: () => _get(itemTypeSlug, pluginName, val),
+            enabled: enabled && !!val,
+        })),
+    })
+    return queries
 }

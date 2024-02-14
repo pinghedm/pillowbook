@@ -11,7 +11,7 @@ class AppConfig(AppConfig):
         try:
             from app.models import ItemType
 
-            ItemType.update_defaults()
+            # ItemType.update_defaults()
         except:
             if not os.environ.get("CI"):
                 traceback.print_exc()

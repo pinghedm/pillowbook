@@ -1,4 +1,7 @@
 from os import environ
+import requests
+from bs4 import BeautifulSoup
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -88,3 +91,26 @@ def update_item_icon(request: HttpRequest, item_token: str) -> HttpResponse:
 @login_required
 def version(request: HttpRequest):
     return JsonResponse({"version": environ.get("COMMIT_HASH", "local")})
+
+
+def _goodreads_query(searchQuery: str):
+    r = requests.get(f"https://www.goodreads.com/search?q={searchQuery}")
+    if not r.status_code == 200:
+        return []
+
+    soup = BeautifulSoup(r.text, "html.parser")
+    print(soup)
+    return []
+
+
+PLUGIN_CONFIG_TEMP = {"goodreads": {"queryFunc": _goodreads_query}}
+
+
+@login_required
+def plugin_autocomplete(request: HttpRequest, item_type_slug: str) -> JsonResponse:
+    query = request.GET.get("query")
+    plugin = request.GET.get("plugin")
+
+    func = PLUGIN_CONFIG_TEMP[plugin]["queryFunc"]
+    res = func(query)
+    return JsonResponse({"data": res})

@@ -36,6 +36,7 @@ import AddActivityModal from 'pages/AddActivityModal/AddActivityModal.lazy'
 import ProfileActivityDefaults from 'pages/Profile/ProfileActivityDefaults/ProfileActivityDefaults.lazy'
 import ActivityWrapper from 'pages/Activities/ActivityWrapper/ActivityWrapper'
 import ProfileHomeConfig from 'pages/Profile/ProfileHomeConfig/ProfileHomeConfig.lazy'
+import PluginWrapper from 'pages/Profile/PluginWrapper/PluginWrapper.lazy'
 
 const baseQueryClient = new QueryClient()
 baseQueryClient.setDefaultOptions({
@@ -300,6 +301,7 @@ const routes = [
             { path: 'activityDefaults', element: <ProfileActivityDefaults /> },
             { path: 'itemTypes', element: <ProfileItemTypes /> },
             { path: 'homeConfig', element: <ProfileHomeConfig /> },
+            { path: 'plugins/:pluginName', element: <PluginWrapper /> },
         ],
     },
     {

@@ -1,8 +1,6 @@
 import axios from 'axios'
 import { ItemDetail } from './item_service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOutlined, VideoCameraOutlined } from '@ant-design/icons'
-import { ReactNode } from 'react'
 
 import { PaginatedResult, getDjangoShapedFilters } from './utils'
 
