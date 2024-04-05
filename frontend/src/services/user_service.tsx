@@ -19,7 +19,7 @@ export interface UserSettings {
 
 export const useUserSettings = () => {
     const _get = async () => {
-        const res = await axios.get<{ settings: UserSettings }>('/api/settings/1')
+        const res = await axios.get<{ settings: UserSettings }>('/api/settings')
         return res.data.settings
     }
 
@@ -29,7 +29,7 @@ export const useUserSettings = () => {
 
 export const useUpdateUserSettings = () => {
     const _patch = async (newSettings: Partial<UserSettings>) => {
-        const res = await axios.patch<UserSettings>('/api/settings/1', { settings: newSettings })
+        const res = await axios.patch<UserSettings>('/api/settings', { settings: newSettings })
         return res.data
     }
 

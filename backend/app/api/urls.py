@@ -27,7 +27,7 @@ urlpatterns = [
     re_path(f"^activity/(?P<token>A_{TOKEN_REGEX})", ActivityDetail.as_view()),
     path("item", ItemList.as_view()),
     re_path(f"^item/(?P<token>I_{TOKEN_REGEX})", ItemDetails.as_view()),
-    re_path("^settings/(?P<pk>\\d+)", UserDetails.as_view()),
+    re_path("^settings", UserDetails.as_view()),
     re_path(
         f"^get_autocomplete_suggestions/(?P<item_slug>[\\w_-]+)",
         get_item_autocomplete_values,

@@ -344,3 +344,6 @@ class UserDetails(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return User.objects.filter(pk=self.request.user.pk)
+
+    def get_object(self):
+        return self.get_queryset().first()
