@@ -61,7 +61,7 @@ const AddItem = ({ itemTypeSlug, setAsParentTo, onFinishCreated }: AddItemProps)
                             />
                         ) : fieldData.type === 'number' ? (
                             <InputNumber
-                                precision={0}
+                                precision={-1 * Math.log10(fieldData?.multipleOf ?? 1)}
                                 value={newItem.info?.[fieldName] || ''}
                                 onChange={val => {
                                     setNewItem(i => ({

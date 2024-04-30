@@ -99,7 +99,7 @@ const CreateNewItem = ({
                             />
                         ) : fieldData.type === 'number' ? (
                             <InputNumber
-                                precision={0}
+                                precision={-1 * Math.log10(fieldData?.multipleOf ?? 1)}
                                 value={itemDetails.info?.[fieldName] || ''}
                                 onChange={val => {
                                     setItemDetails({
@@ -158,7 +158,7 @@ const ItemSelection = ({
                 item_type: item.item_type,
             })
         }
-    }, [item, itemDetails, setItemDetails, createItem])
+    }, [item, itemDetails, setItemDetails, createItem, itemToken])
 
     if (itemToken && !item) {
         return <Spin />
@@ -393,7 +393,7 @@ const AddActivity = ({}: AddActivityProps) => {
             )
         },
 
-        [createActivityMutation, newActivity],
+        [createActivityMutation, newActivity, userSettings?.ratingMax],
     )
 
     if (!itemType) {

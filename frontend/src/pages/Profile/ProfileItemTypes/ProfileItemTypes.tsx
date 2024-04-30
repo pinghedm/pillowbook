@@ -7,6 +7,7 @@ import {
     Divider,
     Flex,
     Input,
+    InputNumber,
     Modal,
     Popconfirm,
     Select,
@@ -232,6 +233,7 @@ const EditItemTypeModal = ({
         required: boolean
         title: string
         type: (typeof FORM_FIELD_TYPES)[number]
+        multipleOf?: number
     }>() // kind of a messy thing here - this type is a dict of any number of properties, but i only want to allow one, but i cant figure out how to index into this type
 
     const iconUploadURL = useMemo(() => {
@@ -532,6 +534,45 @@ const EditItemTypeModal = ({
                                                 })
                                             }}
                                         />
+                                        {typeof v === 'boolean' ? null : v.type === 'number' ? (
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'row',
+                                                    gap: '5px',
+                                                }}
+                                            >
+                                                Precision:{' '}
+                                                <div style={{ width: '50px' }}>
+                                                    <InputNumber
+                                                        style={{ width: '50px' }}
+                                                        value={-1 * Math.log10(v?.multipleOf ?? 1)}
+                                                        onChange={val => {
+                                                            const mult = 10 ** (-1 * (val || 0))
+                                                            const newProperties = {
+                                                                ...itemType.item_schema.properties,
+                                                            }
+                                                            newProperties[k] = {
+                                                                ...(typeof v === 'boolean'
+                                                                    ? {}
+                                                                    : v),
+                                                                multipleOf: mult,
+                                                            }
+                                                            updateItemTypeMutation.mutate({
+                                                                slug: itemType.slug,
+                                                                patch: {
+                                                                    item_schema: {
+                                                                        ...itemType.item_schema,
+                                                                        properties: newProperties,
+                                                                    },
+                                                                },
+                                                            })
+                                                        }}
+                                                        min={0}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : null}
                                     </FormRow>
                                 </div>
                             </div>
@@ -614,6 +655,20 @@ const EditItemTypeModal = ({
                                 setNewField({ ...newField, required: checked })
                             }}
                         />
+                        {newField.type === 'number' ? (
+                            <>
+                                Precision{' '}
+                                <InputNumber
+                                    style={{ width: '50px' }}
+                                    value={-1 * Math.log10(newField?.multipleOf ?? 1)}
+                                    onChange={val => {
+                                        const mult = 10 ** (-1 * (val || 0))
+                                        setNewField({ ...newField, multipleOf: mult })
+                                    }}
+                                    min={0}
+                                />
+                            </>
+                        ) : null}
                     </div>
                     <Button
                         type="primary"
