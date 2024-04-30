@@ -15,6 +15,7 @@ export interface UserSettings {
         activeModules?: (typeof HomeScreenModules)[number]['value'][]
     }
     use24HrTime?: boolean
+    displayTimezone?: string
 }
 
 export const useUserSettings = () => {

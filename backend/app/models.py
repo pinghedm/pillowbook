@@ -10,12 +10,12 @@ from django.db.models.fields import EmailField, DateTimeField, TextField, Boolea
 from django.db.models.fields.json import JSONField
 from django.contrib.postgres.fields import ArrayField
 
-
+from django.utils import timezone
 from app.utils.common_utils import TOKEN_REGEX, gen_token
 from app.managers import UserManager
 from backend.env import WEB_HOST
 
-
+from dateutil.tz import gettz
 class TimeStampedModel(models.Model):
     class Meta:
         abstract = True
@@ -139,10 +139,17 @@ class Item(TimeStampedModel):
         return self.parent.name
 
     def _parse_time_name_field(self, spec, val):
+        print(self.user.settings)
+
+        tz = self.user.settings.get('displayTimezone', 'UTC')
+        tz_local_val = val.astimezone(gettz(tz))
+
         if "!" in spec:
             format_string = spec.split("!")[1]
-            return val.strftime(format_string)
-        return val.isoformat()
+          
+            
+            return tz_local_val.strftime(format_string)
+        return tz_local_val.isoformat()
 
     @property
     def name(self):

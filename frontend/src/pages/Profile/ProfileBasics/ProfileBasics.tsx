@@ -1,4 +1,4 @@
-import { Button, Divider, InputNumber, Switch, Typography } from 'antd'
+import { Button, Divider, Input, InputNumber, Select, Switch, Typography } from 'antd'
 import { useState } from 'react'
 import { useItemTypes } from 'services/item_type_service'
 import { useUpdateUserSettings, useUserSettings } from 'services/user_service'
@@ -26,20 +26,16 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                     value={userSettings?.ratingMax}
                     placeholder="5"
                     onStep={value => {
-                        userSettingsMutation.mutate(
-                            {
-                                ...userSettings,
-                                ratingMax: Number(value),
-                            },
-                        )
+                        userSettingsMutation.mutate({
+                            ...userSettings,
+                            ratingMax: Number(value),
+                        })
                     }}
                     onBlur={e => {
-                        userSettingsMutation.mutate(
-                            {
-                                ...userSettings,
-                                ratingMax: Number(e.target.value),
-                            },
-                        )
+                        userSettingsMutation.mutate({
+                            ...userSettings,
+                            ratingMax: Number(e.target.value),
+                        })
                     }}
                 />
             </div>
@@ -87,15 +83,30 @@ const ProfileBasics = ({}: ProfileBasicsProps) => {
                 <Switch
                     checked={userSettings?.use24HrTime ?? true}
                     onChange={checked => {
-                        userSettingsMutation.mutate(
-                            {
-                                ...userSettings,
-                                use24HrTime: checked,
-                            },
-                        )
+                        userSettingsMutation.mutate({
+                            ...userSettings,
+                            use24HrTime: checked,
+                        })
                     }}
                 />{' '}
                 Use 24 hr time format
+            </div>
+            <div>
+                Display Timezone{' '}
+                <Select
+                    loading={userSettingsMutation.isPending}
+                    style={{ width: '200px' }}
+                    showSearch
+                    options={
+                        // @ts-ignore
+                        Intl.supportedValuesOf('timeZone').map(v => ({ value: v, label: v }))
+                    }
+                    value={userSettings?.displayTimezone ?? 'UTC'}
+                    onChange={val => {
+                        userSettingsMutation.mutate({ ...userSettings, displayTimezone: val })
+                    }}
+                    popupMatchSelectWidth={false}
+                />
             </div>
         </>
     )
